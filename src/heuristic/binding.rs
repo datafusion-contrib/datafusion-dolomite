@@ -56,7 +56,9 @@ impl<'a, 'b> Binding<'a, 'b> {
             let current_node = self.optimizer.expr_at(self.expr_handle);
             let inputs = (0..current_node.inputs_len(self.optimizer))
                 .map(|input_idx| current_node.input_at(input_idx, self.optimizer))
-                .map(|group_id| OptExpression::<HepOptimizer>::with_group_handle(group_id))
+                .map(|group_id| {
+                    OptExpression::<HepOptimizer>::with_group_handle(group_id)
+                })
                 .collect::<Vec<OptExpression<HepOptimizer>>>();
             Some(OptExpression::with_expr_handle(
                 self.expr_handle.clone(),

@@ -92,7 +92,8 @@ impl Rule for RemoveLimitRule {
         {
             let new_limit = min(limit1.limit(), limit2.limit());
 
-            let ret = input[0].clone_with_inputs(Logical(LogicalLimit(Limit::new(new_limit))));
+            let ret =
+                input[0].clone_with_inputs(Logical(LogicalLimit(Limit::new(new_limit))));
 
             result.add(ret);
             Ok(())
@@ -166,19 +167,20 @@ impl Rule for PushLimitToTableScanRule {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
     use datafusion::arrow::datatypes::Schema;
     use datafusion::catalog::schema::MemorySchemaProvider;
     use datafusion::datasource::empty::EmptyTable;
     use datafusion::logical_expr::col;
     use serde_json::Value;
+    use std::sync::Arc;
 
     use crate::heuristic::{HepOptimizer, MatchOrder};
     use crate::optimizer::{Optimizer, OptimizerContext};
     use crate::plan::{LogicalPlanBuilder, Plan};
 
     use crate::rules::{
-        PushLimitOverProjectionRule, PushLimitToTableScanRule, RemoveLimitRule, Rule, RuleImpl,
+        PushLimitOverProjectionRule, PushLimitToTableScanRule, RemoveLimitRule, Rule,
+        RuleImpl,
     };
 
     fn build_hep_optimizer(rules: Vec<RuleImpl>, plan: Plan) -> HepOptimizer {
@@ -209,17 +211,20 @@ mod tests {
             Arc::new(schema)
         };
 
-        let table_provider = Arc::new(EmptyTable::new(Arc::new
-            ((&*schema).clone().into())));
-
+        let table_provider =
+            Arc::new(EmptyTable::new(Arc::new((&*schema).clone().into())));
 
         let optimizer_context = OptimizerContext {
-            catalog: Arc::new(MemorySchemaProvider::new())
+            catalog: Arc::new(MemorySchemaProvider::new()),
         };
 
-        optimizer_context.catalog.register_table("t1".to_string(), table_provider.clone()).unwrap();
+        optimizer_context
+            .catalog
+            .register_table("t1".to_string(), table_provider.clone())
+            .unwrap();
 
-        HepOptimizer::new(MatchOrder::TopDown, 1000, rules, plan, optimizer_context).unwrap()
+        HepOptimizer::new(MatchOrder::TopDown, 1000, rules, plan, optimizer_context)
+            .unwrap()
     }
 
     #[test]
@@ -227,7 +232,7 @@ mod tests {
         let original_plan = LogicalPlanBuilder::new()
             .scan(None, "t1".to_string())
             .limit(5)
-            .projection(vec![col("c1")] )
+            .projection(vec![col("c1")])
             .limit(10)
             .build();
 
@@ -246,19 +251,15 @@ mod tests {
         let expected_plan = {
             let raw_plan = LogicalPlanBuilder::new()
                 .scan(Some(5), "t1".to_string())
-                .projection(vec![col("c1")] )
+                .projection(vec![col("c1")])
                 .build();
 
-            let optimizer = build_hep_optimizer(
-                vec![
-                ],
-                raw_plan,
-            );
+            let optimizer = build_hep_optimizer(vec![], raw_plan);
 
             optimizer.find_best_plan().unwrap()
         };
 
-        assert_eq!(optimized_plan,  expected_plan);
+        assert_eq!(optimized_plan, expected_plan);
     }
 
     #[test]
@@ -266,7 +267,7 @@ mod tests {
         let original_plan = LogicalPlanBuilder::new()
             .scan(None, "t1".to_string())
             .limit(5)
-            .projection(vec![col("c1")] )
+            .projection(vec![col("c1")])
             .limit(10)
             .build();
 

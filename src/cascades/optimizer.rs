@@ -2,9 +2,7 @@ use crate::cascades::memo::Memo;
 use crate::cascades::task::{schedule, OptimizeGroupTask};
 use crate::cascades::{Group, GroupExpr, GroupExprId, GroupId};
 
-
-
-use crate::cost::{INF};
+use crate::cost::INF;
 use crate::error::OptResult;
 
 use crate::optimizer::{Optimizer, OptimizerContext};
@@ -38,9 +36,12 @@ impl Optimizer for CascadesOptimizer {
     }
 
     fn find_best_plan(mut self) -> OptResult<Plan> {
-        let root_task =
-            OptimizeGroupTask::new(self.memo.root_group_id(), self.required_prop.clone(), INF)
-                .into();
+        let root_task = OptimizeGroupTask::new(
+            self.memo.root_group_id(),
+            self.required_prop.clone(),
+            INF,
+        )
+        .into();
 
         schedule(&mut self, root_task)?;
 
@@ -79,8 +80,7 @@ impl CascadesOptimizer {
 #[cfg(test)]
 mod tests {
     use crate::cascades::CascadesOptimizer;
-    
-    
+
     use crate::optimizer::{Optimizer, OptimizerContext};
     use crate::plan::{LogicalPlanBuilder, PhysicalPlanBuilder};
     use crate::properties::PhysicalPropertySet;

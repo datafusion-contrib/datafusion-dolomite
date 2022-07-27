@@ -2,29 +2,26 @@ use std::collections::HashSet;
 use std::mem::swap;
 use std::sync::Arc;
 
-
 use crate::properties::{LogicalProperty, PhysicalPropertySet};
 use crate::stat::Statistics;
 
 mod logical;
 pub use logical::*;
 mod physical;
-pub use physical::*;
 use crate::operator::Operator;
+pub use physical::*;
 
 pub type PlanNodeId = u32;
 
 pub type PlanNodeRef = Arc<PlanNode>;
 
 pub struct PlanNodeIdGen {
-    next: PlanNodeId
+    next: PlanNodeId,
 }
 
 impl PlanNodeIdGen {
     pub fn new() -> Self {
-        Self {
-            next: 0
-        }
+        Self { next: 0 }
     }
     pub fn next(&mut self) -> PlanNodeId {
         self.next += 1;

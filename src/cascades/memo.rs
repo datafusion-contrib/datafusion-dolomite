@@ -63,7 +63,10 @@ impl Memo {
     }
 
     /// Find best plan from root group.
-    pub(super) fn best_plan(&self, required_prop: &PhysicalPropertySet) -> OptResult<Plan> {
+    pub(super) fn best_plan(
+        &self,
+        required_prop: &PhysicalPropertySet,
+    ) -> OptResult<Plan> {
         let id_gen = {
             let id = Rc::new(RefCell::new(0u32));
             move || {
@@ -138,8 +141,8 @@ impl Memo {
             }
             (Some(_), None) => existing_group_expr_id.unwrap(),
             (None, Some(target_group_id)) => {
-                let new_group_expr_id =
-                    self[target_group_id].insert_group_expr(GroupExpr::new(group_expr_key.clone()));
+                let new_group_expr_id = self[target_group_id]
+                    .insert_group_expr(GroupExpr::new(group_expr_key.clone()));
                 self.group_exprs.insert(group_expr_key, new_group_expr_id);
                 new_group_expr_id
             }
@@ -155,7 +158,8 @@ impl Memo {
 
     /// Process `duplicate_groups` and merge them.
     pub(super) fn merge_duplicate_groups(&mut self) {
-        let mut existing_duplicated_groups = HashMap::with_capacity(self.duplicated_groups.len());
+        let mut existing_duplicated_groups =
+            HashMap::with_capacity(self.duplicated_groups.len());
 
         swap(&mut existing_duplicated_groups, &mut self.duplicated_groups);
         for (src, dest) in &existing_duplicated_groups {
@@ -174,13 +178,16 @@ impl Memo {
 
         // Update group expr mapping
         {
-            let mut old_group_key_mapping = HashMap::with_capacity(self.group_exprs.len());
+            let mut old_group_key_mapping =
+                HashMap::with_capacity(self.group_exprs.len());
             swap(&mut old_group_key_mapping, &mut self.group_exprs);
             for (mut group_expr_key, group_expr_id) in old_group_key_mapping {
                 group_expr_key.inputs = group_expr_key
                     .inputs
                     .iter()
-                    .map(|group_id| *existing_duplicated_groups.get(group_id).unwrap_or(group_id))
+                    .map(|group_id| {
+                        *existing_duplicated_groups.get(group_id).unwrap_or(group_id)
+                    })
                     .collect();
                 let new_group_expr_id = self
                     .merged_group_expr
@@ -302,7 +309,9 @@ impl Memo {
         self.get_group_expression(&group_expr_id).or_else(|| {
             self.merged_group_expr
                 .get(&group_expr_id)
-                .and_then(|merged_group_expr_id| self.get_group_expression(merged_group_expr_id))
+                .and_then(|merged_group_expr_id| {
+                    self.get_group_expression(merged_group_expr_id)
+                })
         })
     }
 
@@ -850,7 +859,8 @@ mod tests {
     };
     use crate::operator::Operator::Logical;
     use crate::operator::{
-        Join, Limit as LimitOp, Projection as ProjectionOp, TableScan as TableScanOp, TableScan,
+        Join, Limit as LimitOp, Projection as ProjectionOp, TableScan as TableScanOp,
+        TableScan,
     };
     use crate::plan::LogicalPlanBuilder;
     use datafusion::logical_plan::Operator::Eq;

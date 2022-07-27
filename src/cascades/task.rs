@@ -112,8 +112,10 @@ impl Task for ApplyRuleTask {
                     self.rule, self.group_expr_id, result_node
                 );
                 let group_expr_id = {
-                    ctx.memo
-                        .insert_opt_expression(&result_node, Some(self.group_expr_id.group_id))
+                    ctx.memo.insert_opt_expression(
+                        &result_node,
+                        Some(self.group_expr_id.group_id),
+                    )
                 };
 
                 if ctx.memo[group_expr_id].is_logical() {
@@ -268,7 +270,9 @@ impl OptimizeInputsTask {
                 derive_idx: 0,
                 input_idx: 0,
                 accumulated_cost: operator_cost,
-                best_input_group_expr: Vec::with_capacity(memo[self.group_expr_id].inputs_len(ctx)),
+                best_input_group_expr: Vec::with_capacity(
+                    memo[self.group_expr_id].inputs_len(ctx),
+                ),
             }
         };
 
@@ -280,7 +284,10 @@ impl OptimizeInputsTask {
         })
     }
 
-    fn do_before_optimize_input(mut self, ctx: &CascadesOptimizer) -> OptResult<TaskControl> {
+    fn do_before_optimize_input(
+        mut self,
+        ctx: &CascadesOptimizer,
+    ) -> OptResult<TaskControl> {
         println!("Current state {:?} for OptimizeInputsTask", &self);
         let mut new_state = Invalid;
         swap(&mut new_state, &mut self.state);
@@ -316,7 +323,10 @@ impl OptimizeInputsTask {
         }
     }
 
-    fn do_after_optimize_input(mut self, ctx: &CascadesOptimizer) -> OptResult<TaskControl> {
+    fn do_after_optimize_input(
+        mut self,
+        ctx: &CascadesOptimizer,
+    ) -> OptResult<TaskControl> {
         println!("Current state {:?} for OptimizeInputsTask", &self);
         let mut new_state = Invalid;
         swap(&mut new_state, &mut self.state);
@@ -328,11 +338,14 @@ impl OptimizeInputsTask {
                 mut accumulated_cost,
                 mut best_input_group_expr,
             } => {
-                let input_group_id = ctx.memo[self.group_expr_id].input_at(input_idx, ctx);
+                let input_group_id =
+                    ctx.memo[self.group_expr_id].input_at(input_idx, ctx);
                 let input_required_prop =
                     &derive_results[derive_idx].input_required_props[input_idx];
 
-                if let Some(winner) = ctx.memo[input_group_id].winner(&input_required_prop) {
+                if let Some(winner) =
+                    ctx.memo[input_group_id].winner(&input_required_prop)
+                {
                     // Found a good plan for this required property
                     best_input_group_expr.push(winner.group_expr_id);
                     accumulated_cost += winner.lowest_cost;
@@ -365,7 +378,9 @@ impl OptimizeInputsTask {
                             derive_idx: derive_idx + 1,
                             input_idx: 0,
                             accumulated_cost: self.operator_cost(ctx)?,
-                            best_input_group_expr: Vec::with_capacity(self.inputs_len(ctx)),
+                            best_input_group_expr: Vec::with_capacity(
+                                self.inputs_len(ctx),
+                            ),
                         }
                     }
                 }
@@ -427,7 +442,8 @@ impl OptimizeInputsTask {
                                 Some(self.group_expr_id.group_id),
                             );
 
-                            accumulated_cost += enforcer.operator.cost(group_expr_id, ctx)?;
+                            accumulated_cost +=
+                                enforcer.operator.cost(group_expr_id, ctx)?;
                             ctx.memo[self.group_expr_id.group_id].update_winner(
                                 self.group_expr_id,
                                 &enforcer.output_prop,
@@ -631,8 +647,8 @@ mod tests {
 
         let task = ApplyRuleTask {
             rule: CommutateJoinRule::new().into(),
-            group_expr_id: optimizer.memo[optimizer.memo.root_group_id()].logical_group_expr_ids()
-                [0],
+            group_expr_id: optimizer.memo[optimizer.memo.root_group_id()]
+                .logical_group_expr_ids()[0],
             required_prop: PhysicalPropertySet::default(),
             upper_bound: INF,
         };

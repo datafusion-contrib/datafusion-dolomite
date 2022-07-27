@@ -1,9 +1,9 @@
-use std::sync::Arc;
-use datafusion::prelude::{Expr, JoinType};
 use crate::operator::LogicalOperator::{LogicalJoin, LogicalProjection, LogicalScan};
 use crate::operator::Operator::Logical;
 use crate::operator::{Join, Limit, LogicalOperator, Projection, TableScan};
 use crate::plan::{Plan, PlanNode, PlanNodeId, PlanNodeRef};
+use datafusion::prelude::{Expr, JoinType};
+use std::sync::Arc;
 
 pub struct LogicalPlanBuilder {
     root: Option<PlanNodeRef>,

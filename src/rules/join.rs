@@ -50,7 +50,8 @@ impl Rule for CommutateJoinRule {
         result: &mut RuleResult<O>,
     ) -> OptResult<()> {
         let op = input.get_operator(&_ctx)?.clone();
-        let ret = OptExpression::with_operator(op, vec![input[1].clone(), input[0].clone()]);
+        let ret =
+            OptExpression::with_operator(op, vec![input[1].clone(), input[0].clone()]);
         result.add(ret);
         Ok(())
     }

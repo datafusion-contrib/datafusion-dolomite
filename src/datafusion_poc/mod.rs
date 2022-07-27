@@ -1,6 +1,6 @@
 //! Contains code to integrate with datafusion.
-mod rule;
 mod plan;
 mod planner;
+mod rule;
 
 pub type DFResult<T> = datafusion::common::Result<T>;
