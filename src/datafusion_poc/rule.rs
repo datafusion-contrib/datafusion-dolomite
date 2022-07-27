@@ -67,11 +67,11 @@ mod tests {
     use datafusion::catalog::schema::MemorySchemaProvider;
     use datafusion::common::ToDFSchema;
     use datafusion::datasource::empty::EmptyTable;
-    use datafusion::execution::context::ExecutionProps;
     use datafusion::logical_expr::col;
     use datafusion::logical_plan::plan::{DefaultTableSource, TableScan as DFTableScan};
     use datafusion::logical_plan::{LogicalPlan, LogicalPlanBuilder};
     use datafusion::optimizer::optimizer::OptimizerRule;
+    use datafusion::optimizer::OptimizerConfig;
     use serde_json::Value;
     use std::sync::Arc;
 
@@ -115,15 +115,15 @@ mod tests {
                 projection: None,
                 projected_schema: (&*schema).clone().to_dfschema_ref().unwrap(),
                 filters: vec![],
-                limit: None,
+                fetch: None,
             };
 
             LogicalPlanBuilder::from(LogicalPlan::TableScan(df_scan))
-                .limit(10)
+                .limit(None, Some(10))
                 .unwrap()
                 .project(vec![col("c1")])
                 .unwrap()
-                .limit(5)
+                .limit(None, Some(5))
                 .unwrap()
                 .build()
                 .unwrap()
@@ -148,7 +148,7 @@ mod tests {
                 optimizer_context,
             };
 
-            rule.optimize(&df_logical_plan, &ExecutionProps::new())
+            rule.optimize(&df_logical_plan, &mut OptimizerConfig::new())
                 .unwrap()
         };
 
@@ -163,7 +163,7 @@ mod tests {
                 projection: None,
                 projected_schema: (&*schema).clone().to_dfschema_ref().unwrap(),
                 filters: vec![],
-                limit: Some(5),
+                fetch: Some(5),
             };
 
             LogicalPlanBuilder::from(LogicalPlan::TableScan(df_scan))

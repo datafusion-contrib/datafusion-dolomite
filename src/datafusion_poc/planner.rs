@@ -134,7 +134,7 @@ mod tests {
                 projection: None,
                 projected_schema: table_schema("t1").to_dfschema_ref().unwrap(),
                 filters: vec![],
-                limit: None,
+                fetch: None,
             };
 
             let df_scan_t1_plan =
@@ -148,7 +148,7 @@ mod tests {
                 projection: None,
                 projected_schema: table_schema("t2").to_dfschema_ref().unwrap(),
                 filters: vec![],
-                limit: None,
+                fetch: None,
             };
 
             LogicalPlanBuilder::from(LogicalPlan::TableScan(df_scan_t2))
@@ -156,6 +156,7 @@ mod tests {
                     &df_scan_t1_plan,
                     JoinType::Inner,
                     (vec!["t1_c1"], vec!["t2_c2"]),
+                    None,
                 )
                 .unwrap()
                 .build()

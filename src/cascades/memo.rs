@@ -851,8 +851,7 @@ pub(super) struct WinnerInput {
 #[cfg(test)]
 mod tests {
 
-    use datafusion::logical_expr::col;
-    use datafusion::logical_plan::binary_expr;
+    use datafusion::logical_expr::{binary_expr, col};
     use datafusion::prelude::JoinType;
 
     use crate::cascades::memo::Memo;
