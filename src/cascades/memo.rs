@@ -710,11 +710,13 @@ impl Group {
 }
 
 /// Base group expression information.
-#[derive(Eq, PartialEq, Hash, Debug, Clone)]
+#[derive(PartialEq, Hash, Debug, Clone)]
 pub(super) struct GroupExprKey {
     pub(super) operator: Operator,
     pub(super) inputs: Vec<GroupId>,
 }
+
+impl Eq for GroupExprKey {}
 
 pub struct GroupExpr {
     /// Can be used to uniquely identify a group expression.

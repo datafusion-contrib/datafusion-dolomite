@@ -3,9 +3,9 @@ use crate::optimizer::{Optimizer, OptimizerContext};
 use crate::plan::{Plan, PlanNode};
 use crate::rules::RuleImpl;
 use datafusion::common::DataFusionError;
-use datafusion::execution::context::ExecutionProps;
 use datafusion::logical_expr::LogicalPlan;
 use datafusion::optimizer::optimizer::OptimizerRule;
+use datafusion::optimizer::OptimizerConfig;
 use std::sync::Arc;
 
 /// An adapter converts [`HeuristicOptimizer`] into datafusion's optimizer rule.
@@ -26,7 +26,7 @@ impl OptimizerRule for DFOptimizerAdapterRule {
     fn optimize(
         &self,
         df_plan: &LogicalPlan,
-        _execution_props: &ExecutionProps,
+        _optimizer_config: &OptimizerConfig,
     ) -> datafusion::common::Result<LogicalPlan> {
         println!("Beginning to execute heuristic optimizer");
         let plan = Plan::new(Arc::new(

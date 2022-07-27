@@ -25,9 +25,9 @@ use datafusion::logical_plan::JoinConstraint;
 use datafusion::logical_plan::Operator as DFOperator;
 use datafusion::physical_plan::hash_join::{HashJoinExec, PartitionMode};
 use datafusion::physical_plan::join_utils::JoinOn;
-use datafusion::physical_plan::planner::create_physical_expr;
 use datafusion::physical_plan::projection::ProjectionExec;
 use datafusion::physical_plan::ExecutionPlan;
+use datafusion_physical_expr::create_physical_expr;
 use futures::future::BoxFuture;
 use std::sync::Arc;
 
@@ -55,7 +55,8 @@ fn df_logical_plan_to_plan_node(
             (operator, inputs)
         }
         LogicalPlan::Limit(limit) => {
-            let operator = LogicalOperator::LogicalLimit(Limit::new(limit.n));
+            let operator =
+                LogicalOperator::LogicalLimit(Limit::new(limit.fetch.unwrap()));
             let inputs = vec![df_logical_plan_to_plan_node(&limit.input, id_gen)?];
             (operator, inputs)
         }
@@ -140,7 +141,8 @@ fn plan_node_to_df_logical_plan(plan_node: &PlanNode) -> OptResult<LogicalPlan> 
         }
         Logical(LogicalLimit(limit)) => {
             let df_limit = DFLimit {
-                n: limit.limit(),
+                skip: None,
+                fetch: Some(limit.limit()),
                 input: Arc::new(inputs.remove(0)),
             };
 
@@ -151,6 +153,7 @@ fn plan_node_to_df_logical_plan(plan_node: &PlanNode) -> OptResult<LogicalPlan> 
                 left: Arc::new(inputs.remove(0)),
                 right: Arc::new(inputs.remove(0)),
                 on: expr_to_df_join_condition(join.expr())?,
+                filter: None,
                 join_type: join.join_type(),
                 join_constraint: JoinConstraint::On,
                 schema: Arc::new(plan_node.logical_prop().unwrap().schema().clone()),
@@ -170,7 +173,7 @@ fn plan_node_to_df_logical_plan(plan_node: &PlanNode) -> OptResult<LogicalPlan> 
                 projection: None,
                 projected_schema: schema,
                 filters: vec![],
-                limit: scan.limit(),
+                fetch: scan.limit(),
             };
 
             Ok(LogicalPlan::TableScan(df_scan))
@@ -242,6 +245,7 @@ pub fn plan_node_to_df_physical_plan<'a>(
                     physical_left,
                     physical_right,
                     join_on,
+                    None,
                     &hash_join.join_type(),
                     PartitionMode::CollectLeft,
                     &true,
@@ -253,7 +257,7 @@ pub fn plan_node_to_df_physical_plan<'a>(
                         anyhow!(format!("Table not found: {}", table_scan.table_name()))
                     })?;
                 Ok(source
-                    .scan(&None, &[], None)
+                    .scan(session_state, &None, &[], None)
                     .await
                     .map_err(|e| anyhow!(e))?
                     as Arc<dyn ExecutionPlan>)

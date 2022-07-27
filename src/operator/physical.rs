@@ -9,7 +9,7 @@ use crate::optimizer::Optimizer;
 use crate::properties::PhysicalPropertySet;
 
 /// Physical relational operator.
-#[derive(Clone, Debug, Hash, Eq, PartialEq)]
+#[derive(Clone, Debug, Hash, PartialEq)]
 #[enum_dispatch]
 pub enum PhysicalOperator {
     PhysicalProjection(Projection),

@@ -1,14 +1,16 @@
-use datafusion::logical_plan::{exprlist_to_fields, DFSchema, Expr};
+use datafusion::common::DFField;
+use datafusion::logical_expr::ExprSchemable;
+use datafusion::logical_plan::{DFSchema, Expr};
 
 use crate::cost::Cost;
-use crate::error::OptResult;
+use crate::error::{DFResult, OptResult};
 use crate::operator::{
     DerivePropContext, DerivePropResult, OperatorTrait, PhysicalOperatorTrait,
 };
 use crate::optimizer::{OptExpr, OptGroup, Optimizer};
 use crate::properties::LogicalProperty;
 
-#[derive(Clone, Debug, Hash, Eq, PartialEq)]
+#[derive(Clone, Debug, Hash, PartialEq)]
 pub struct Projection {
     expr: Vec<Expr>,
 }
@@ -51,8 +53,12 @@ impl OperatorTrait for Projection {
         let input_logical_prop = optimizer
             .group_at(optimizer.expr_at(handle).input_at(0, optimizer))
             .logical_prop();
+        let input_schema = input_logical_prop.schema();
         let schema = DFSchema::new_with_metadata(
-            exprlist_to_fields(&self.expr, input_logical_prop.schema())?,
+            self.expr
+                .iter()
+                .map(|e| e.to_field(input_schema))
+                .collect::<DFResult<Vec<DFField>>>()?,
             input_logical_prop.schema().metadata().clone(),
         )?;
 
