@@ -117,7 +117,7 @@ impl HepOptimizer {
             let mut results = RuleResult::new();
             rule.apply(opt_node, self, &mut results)?;
 
-            for (idx, new_expr) in results.results().enumerate() {
+            if let Some((idx, new_expr)) = results.results().enumerate().next() {
                 ensure!(
                     idx < 1,
                     "Rewrite rule should not return no more than 1 result."

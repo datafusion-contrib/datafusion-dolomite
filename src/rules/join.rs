@@ -26,7 +26,7 @@ lazy_static! {
 }
 
 /// Commutate inner join inputs.
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct CommutateJoinRule {}
 
 impl CommutateJoinRule {
@@ -70,7 +70,7 @@ impl Rule for CommutateJoinRule {
 }
 
 /// Transforms equi join to hash join.
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Join2HashJoinRule {}
 
 impl Join2HashJoinRule {
@@ -79,10 +79,7 @@ impl Join2HashJoinRule {
     }
 
     fn matches(op: &Operator) -> bool {
-        match op {
-            Logical(LogicalJoin(_)) => true,
-            _ => false,
-        }
+        matches!(op, Logical(LogicalJoin(_)))
     }
 }
 

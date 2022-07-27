@@ -10,6 +10,12 @@ pub struct LogicalPlanBuilder {
     next_plan_node_id: PlanNodeId,
 }
 
+impl Default for LogicalPlanBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl LogicalPlanBuilder {
     pub fn new() -> Self {
         Self {

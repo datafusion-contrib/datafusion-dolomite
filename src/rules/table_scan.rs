@@ -18,7 +18,7 @@ lazy_static! {
 }
 
 /// Table scan implementation rule.
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Scan2TableScanRule {}
 
 impl Scan2TableScanRule {

@@ -33,10 +33,14 @@ impl<'a, 'b> Binding<'a, 'b> {
             }
 
             let mut inputs = Vec::with_capacity(children.len());
-            for idx in 0..expr.inputs_len(self.optimizer) {
+            for (idx, pattern) in children
+                .iter()
+                .enumerate()
+                .take(expr.inputs_len(self.optimizer))
+            {
                 if let Some(opt_input) = Binding::new(
                     expr.input_at(idx, self.optimizer),
-                    &children[idx],
+                    pattern,
                     self.optimizer,
                 )
                 .next()
@@ -47,10 +51,7 @@ impl<'a, 'b> Binding<'a, 'b> {
                 }
             }
 
-            Some(OptExpression::with_expr_handle(
-                self.expr_handle,
-                inputs,
-            ))
+            Some(OptExpression::with_expr_handle(self.expr_handle, inputs))
         } else {
             // Collect leaf node's inputs
             let current_node = self.optimizer.expr_at(self.expr_handle);
@@ -60,10 +61,7 @@ impl<'a, 'b> Binding<'a, 'b> {
                     OptExpression::<HepOptimizer>::with_group_handle(group_id)
                 })
                 .collect::<Vec<OptExpression<HepOptimizer>>>();
-            Some(OptExpression::with_expr_handle(
-                self.expr_handle,
-                inputs,
-            ))
+            Some(OptExpression::with_expr_handle(self.expr_handle, inputs))
         }
     }
 }

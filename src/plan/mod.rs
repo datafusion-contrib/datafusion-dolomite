@@ -19,11 +19,18 @@ pub struct PlanNodeIdGen {
     next: PlanNodeId,
 }
 
+impl Default for PlanNodeIdGen {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PlanNodeIdGen {
     pub fn new() -> Self {
         Self { next: 0 }
     }
-    pub fn next(&mut self) -> PlanNodeId {
+
+    pub fn gen_next(&mut self) -> PlanNodeId {
         self.next += 1;
         self.next
     }

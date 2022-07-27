@@ -1,5 +1,5 @@
 use crate::cascades::memo::Memo;
-use crate::cascades::task::{schedule, OptimizeGroupTask};
+use crate::cascades::task::{schedule, OptimizeGroup};
 use crate::cascades::{Group, GroupExpr, GroupExprId, GroupId};
 
 use crate::cost::INF;
@@ -36,7 +36,7 @@ impl Optimizer for CascadesOptimizer {
     }
 
     fn find_best_plan(mut self) -> OptResult<Plan> {
-        let root_task = OptimizeGroupTask::new(
+        let root_task = OptimizeGroup::new(
             self.memo.root_group_id(),
             self.required_prop.clone(),
             INF,

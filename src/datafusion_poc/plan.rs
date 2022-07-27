@@ -45,7 +45,7 @@ fn df_logical_plan_to_plan_node(
     df_plan: &LogicalPlan,
     id_gen: &mut PlanNodeIdGen,
 ) -> OptResult<PlanNode> {
-    let id = id_gen.next();
+    let id = id_gen.gen_next();
     let (operator, inputs) = match df_plan {
         LogicalPlan::Projection(projection) => {
             let operator = LogicalOperator::LogicalProjection(Projection::new(

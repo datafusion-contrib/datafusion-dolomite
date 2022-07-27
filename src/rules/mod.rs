@@ -220,6 +220,12 @@ pub struct RuleResult<O: Optimizer> {
     exprs: OptExprVec<O>,
 }
 
+impl<O: Optimizer> Default for RuleResult<O> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<O: Optimizer> RuleResult<O> {
     pub fn new() -> Self {
         Self { exprs: vec![] }

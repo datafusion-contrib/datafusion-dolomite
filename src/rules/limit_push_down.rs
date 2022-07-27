@@ -31,7 +31,7 @@ lazy_static! {
     };
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct PushLimitOverProjectionRule {}
 
 impl PushLimitOverProjectionRule {
@@ -71,7 +71,7 @@ impl Rule for PushLimitOverProjectionRule {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct RemoveLimitRule {}
 
 impl RemoveLimitRule {
@@ -115,7 +115,7 @@ impl Rule for RemoveLimitRule {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct PushLimitToTableScanRule {}
 
 impl PushLimitToTableScanRule {
@@ -137,7 +137,7 @@ impl Rule for PushLimitToTableScanRule {
             let new_limit = scan
                 .limit()
                 .map(|l1| min(l1, limit.limit()))
-                .unwrap_or(limit.limit());
+                .unwrap_or_else(|| limit.limit());
 
             let ret = OptExpression::from(Logical(LogicalScan(TableScan::with_limit(
                 scan.table_name(),
@@ -211,8 +211,7 @@ mod tests {
             Arc::new(schema)
         };
 
-        let table_provider =
-            Arc::new(EmptyTable::new(Arc::new((&*schema).clone())));
+        let table_provider = Arc::new(EmptyTable::new(Arc::new((&*schema).clone())));
 
         let optimizer_context = OptimizerContext {
             catalog: Arc::new(MemorySchemaProvider::new()),
