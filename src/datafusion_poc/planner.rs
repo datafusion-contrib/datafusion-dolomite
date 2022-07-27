@@ -117,9 +117,9 @@ mod tests {
     fn table_source(prefix: &str) -> Arc<DefaultTableSource> {
         let schema = table_schema(prefix);
         let table_provider =
-            Arc::new(EmptyTable::new(Arc::new((&*schema).clone().into())));
+            Arc::new(EmptyTable::new(Arc::new((&*schema).clone())));
 
-        Arc::new(DefaultTableSource::new(table_provider.clone()))
+        Arc::new(DefaultTableSource::new(table_provider))
     }
 
     #[tokio::test]
@@ -133,7 +133,7 @@ mod tests {
                 table_name: "t1".to_string(),
                 source: t1_source.clone(),
                 projection: None,
-                projected_schema: table_schema("t1").clone().to_dfschema_ref().unwrap(),
+                projected_schema: table_schema("t1").to_dfschema_ref().unwrap(),
                 filters: vec![],
                 limit: None,
             };
@@ -147,7 +147,7 @@ mod tests {
                 table_name: "t2".to_string(),
                 source: t2_source.clone(),
                 projection: None,
-                projected_schema: table_schema("t2").clone().to_dfschema_ref().unwrap(),
+                projected_schema: table_schema("t2").to_dfschema_ref().unwrap(),
                 filters: vec![],
                 limit: None,
             };

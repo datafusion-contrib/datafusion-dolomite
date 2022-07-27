@@ -195,9 +195,9 @@ impl<O: Optimizer> OptExpression<O> {
         };
 
         match &self.node {
-            ExprHandleNode(handle) => write!(f, "{}{:?}\n", prefix, handle),
-            GroupHandleNode(handle) => write!(f, "{}{:?}\n", prefix, handle),
-            OperatorNode(operator) => write!(f, "{}{:?}\n", prefix, operator),
+            ExprHandleNode(handle) => writeln!(f, "{}{:?}", prefix, handle),
+            GroupHandleNode(handle) => writeln!(f, "{}{:?}", prefix, handle),
+            OperatorNode(operator) => writeln!(f, "{}{:?}", prefix, operator),
         }?;
         for input in &self.inputs {
             input.format(f, level + 1)?;

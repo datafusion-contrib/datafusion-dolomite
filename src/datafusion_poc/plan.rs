@@ -37,7 +37,7 @@ impl<'a> TryFrom<&'a LogicalPlan> for PlanNode {
 
     fn try_from(value: &'a LogicalPlan) -> Result<Self, anyhow::Error> {
         let mut plan_node_id_gen = PlanNodeIdGen::new();
-        df_logical_plan_to_plan_node(&value, &mut plan_node_id_gen)
+        df_logical_plan_to_plan_node(value, &mut plan_node_id_gen)
     }
 }
 
@@ -66,7 +66,7 @@ fn df_logical_plan_to_plan_node(
                 .map(|(left, right)| {
                     ExprColumn(left.clone()).eq(ExprColumn(right.clone()))
                 })
-                .reduce(|a, b| and(a, b))
+                .reduce(and)
                 .unwrap_or(Expr::Literal(ScalarValue::Boolean(Some(true))));
             let operator =
                 LogicalOperator::LogicalJoin(Join::new(join.join_type, join_cond));
@@ -253,7 +253,7 @@ pub fn plan_node_to_df_physical_plan<'a>(
                         anyhow!(format!("Table not found: {}", table_scan.table_name()))
                     })?;
                 Ok(source
-                    .scan(&None, &vec![], None)
+                    .scan(&None, &[], None)
                     .await
                     .map_err(|e| anyhow!(e))?
                     as Arc<dyn ExecutionPlan>)

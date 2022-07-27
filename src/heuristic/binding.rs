@@ -48,7 +48,7 @@ impl<'a, 'b> Binding<'a, 'b> {
             }
 
             Some(OptExpression::with_expr_handle(
-                self.expr_handle.clone(),
+                self.expr_handle,
                 inputs,
             ))
         } else {
@@ -61,7 +61,7 @@ impl<'a, 'b> Binding<'a, 'b> {
                 })
                 .collect::<Vec<OptExpression<HepOptimizer>>>();
             Some(OptExpression::with_expr_handle(
-                self.expr_handle.clone(),
+                self.expr_handle,
                 inputs,
             ))
         }

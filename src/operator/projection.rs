@@ -49,7 +49,7 @@ impl OperatorTrait for Projection {
         optimizer: &O,
     ) -> OptResult<LogicalProperty> {
         let input_logical_prop = optimizer
-            .group_at(optimizer.expr_at(handle.clone()).input_at(0, optimizer))
+            .group_at(optimizer.expr_at(handle).input_at(0, optimizer))
             .logical_prop();
         let schema = DFSchema::new_with_metadata(
             exprlist_to_fields(&self.expr, input_logical_prop.schema())?,

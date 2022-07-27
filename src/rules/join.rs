@@ -49,7 +49,7 @@ impl Rule for CommutateJoinRule {
         _ctx: &O,
         result: &mut RuleResult<O>,
     ) -> OptResult<()> {
-        let op = input.get_operator(&_ctx)?.clone();
+        let op = input.get_operator(_ctx)?.clone();
         let ret =
             OptExpression::with_operator(op, vec![input[1].clone(), input[0].clone()]);
         result.add(ret);
@@ -93,7 +93,7 @@ impl Rule for Join2HashJoinRule {
         _ctx: &O,
         result: &mut RuleResult<O>,
     ) -> OptResult<()> {
-        if let Logical(LogicalJoin(join)) = input.get_operator(&_ctx)? {
+        if let Logical(LogicalJoin(join)) = input.get_operator(_ctx)? {
             let hash_join_op = Physical(PhysicalHashJoin(join.clone()));
             let ret = input.clone_with_inputs(hash_join_op);
 

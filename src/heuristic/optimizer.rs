@@ -51,7 +51,7 @@ impl Optimizer for HepOptimizer {
         for _times in 0..self.max_iter_times {
             // The plan no longer changes after iteration
             let mut fixed_point = true;
-            let node_ids = self.graph.nodes_iter(self.match_order.clone());
+            let node_ids = self.graph.nodes_iter(self.match_order);
             for node_id in node_ids {
                 let expr_handle = node_id;
 
@@ -61,7 +61,7 @@ impl Optimizer for HepOptimizer {
                         rule,
                         self.expr_at(expr_handle).operator()
                     );
-                    if self.apply_rule(rule.clone(), expr_handle.clone())? {
+                    if self.apply_rule(rule.clone(), expr_handle)? {
                         println!(
                             "Plan after applying rule {:?} is {:?}",
                             rule,
@@ -126,7 +126,7 @@ impl HepOptimizer {
             }
 
             // No transformation generated.
-            return Ok(false);
+            Ok(false)
         } else {
             Ok(false)
         }
@@ -229,7 +229,7 @@ impl HepOptimizer {
                         .get(&plan_node_ref.id())
                         .unwrap()
                         .iter()
-                        .map(|id| OptExpression::with_expr_handle(id.clone(), vec![])),
+                        .map(|id| OptExpression::with_expr_handle(*id, vec![])),
                 ))?;
             node_id_map.insert(plan_node_ref.id(), plan_node_id);
         }

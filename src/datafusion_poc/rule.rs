@@ -105,7 +105,7 @@ mod tests {
         };
 
         let table_provider =
-            Arc::new(EmptyTable::new(Arc::new((&*schema).clone().into())));
+            Arc::new(EmptyTable::new(Arc::new((&*schema).clone())));
 
         // Construct datafusion logical plan
         let df_logical_plan = {
@@ -137,7 +137,7 @@ mod tests {
 
             optimizer_context
                 .catalog
-                .register_table("t1".to_string(), table_provider.clone())
+                .register_table("t1".to_string(), table_provider)
                 .unwrap();
 
             let rule = DFOptimizerAdapterRule {
@@ -155,7 +155,7 @@ mod tests {
 
         let expected_plan = {
             let source = Arc::new(DefaultTableSource::new(Arc::new(EmptyTable::new(
-                Arc::new((&*schema).clone().into()),
+                Arc::new((&*schema).clone()),
             ))));
 
             let df_scan = DFTableScan {

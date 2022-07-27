@@ -47,8 +47,8 @@ impl Rule for PushLimitOverProjectionRule {
         _ctx: &O,
         result: &mut RuleResult<O>,
     ) -> OptResult<()> {
-        let limit = opt_expr.get_operator(&_ctx)?;
-        let projection = opt_expr[0].get_operator(&_ctx)?;
+        let limit = opt_expr.get_operator(_ctx)?;
+        let projection = opt_expr[0].get_operator(_ctx)?;
 
         let new_limit = opt_expr[0].clone_with_inputs(limit.clone());
         let ret = OptExpression::with_operator(projection.clone(), vec![new_limit]);
@@ -88,7 +88,7 @@ impl Rule for RemoveLimitRule {
         result: &mut RuleResult<O>,
     ) -> OptResult<()> {
         if let (Logical(LogicalLimit(limit1)), Logical(LogicalLimit(limit2))) =
-            (input.get_operator(&_ctx)?, input[0].get_operator(&_ctx)?)
+            (input.get_operator(_ctx)?, input[0].get_operator(_ctx)?)
         {
             let new_limit = min(limit1.limit(), limit2.limit());
 
@@ -132,7 +132,7 @@ impl Rule for PushLimitToTableScanRule {
         result: &mut RuleResult<O>,
     ) -> OptResult<()> {
         if let (Logical(LogicalLimit(limit)), Logical(LogicalScan(scan))) =
-            (input.get_operator(&ctx)?, input[0].get_operator(&ctx)?)
+            (input.get_operator(ctx)?, input[0].get_operator(ctx)?)
         {
             let new_limit = scan
                 .limit()
@@ -212,7 +212,7 @@ mod tests {
         };
 
         let table_provider =
-            Arc::new(EmptyTable::new(Arc::new((&*schema).clone().into())));
+            Arc::new(EmptyTable::new(Arc::new((&*schema).clone())));
 
         let optimizer_context = OptimizerContext {
             catalog: Arc::new(MemorySchemaProvider::new()),
@@ -220,7 +220,7 @@ mod tests {
 
         optimizer_context
             .catalog
-            .register_table("t1".to_string(), table_provider.clone())
+            .register_table("t1".to_string(), table_provider)
             .unwrap();
 
         HepOptimizer::new(MatchOrder::TopDown, 1000, rules, plan, optimizer_context)
@@ -272,6 +272,6 @@ mod tests {
             .build();
 
         let rule = PushLimitOverProjectionRule::new();
-        assert!((rule.pattern().predict)(&original_plan.root().operator()));
+        assert!((rule.pattern().predict)(original_plan.root().operator()));
     }
 }

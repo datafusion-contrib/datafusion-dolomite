@@ -77,7 +77,7 @@ impl Memo {
         self.groups
             .get(&self.root_group_id)
             .unwrap()
-            .best_plan_of(required_prop, &self, id_gen)
+            .best_plan_of(required_prop, self, id_gen)
             .map(Plan::new)
     }
 
@@ -129,7 +129,7 @@ impl Memo {
         group_expr_key: GroupExprKey,
         target_group: Option<GroupId>,
     ) -> GroupExprId {
-        let existing_group_expr_id = self.group_exprs.get(&group_expr_key).map(|id| *id);
+        let existing_group_expr_id = self.group_exprs.get(&group_expr_key).copied();
         let existing_group = existing_group_expr_id.map(|id| id.group_id);
 
         match (existing_group, target_group) {
@@ -395,9 +395,9 @@ impl IndexMut<GroupExprId> for Memo {
 
 impl Debug for Memo {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "")?;
+        writeln!(f)?;
         writeln!(f, "Groups in memo:")?;
-        writeln!(f, "")?;
+        writeln!(f)?;
 
         for group in self.groups.values() {
             writeln!(f, "{:?}", group)?;
@@ -442,7 +442,7 @@ impl Debug for Memo {
             writeln!(f, "{}", table)?;
         }
 
-        writeln!(f, "")
+        writeln!(f)
     }
 }
 
@@ -587,18 +587,17 @@ impl Group {
     }
 
     pub(super) fn physical_group_expr_ids(&self) -> Vec<GroupExprId> {
-        self.physical_group_exprs.keys().map(|k| *k).collect()
+        self.physical_group_exprs.keys().copied().collect()
     }
 
     pub(super) fn logical_group_expr_ids(&self) -> Vec<GroupExprId> {
         if cfg!(test) {
             self.logical_group_exprs
-                .keys()
-                .map(|k| *k)
+                .keys().copied()
                 .sorted_by_key(|g| g.expr_id + g.group_id.0)
                 .collect()
         } else {
-            self.logical_group_exprs.keys().map(|k| *k).collect()
+            self.logical_group_exprs.keys().copied().collect()
         }
     }
 
@@ -619,7 +618,7 @@ impl Group {
         self.best_plans.insert(
             output_prop.clone(),
             OptimizationResult {
-                lowest_cost: cost.clone(),
+                lowest_cost: cost,
                 group_expr_id,
             },
         );
@@ -742,7 +741,7 @@ impl OptExpr for GroupExpr {
     }
 
     fn input_at(&self, idx: usize, _opt: &CascadesOptimizer) -> GroupId {
-        self.key.inputs[idx].clone()
+        self.key.inputs[idx]
     }
 }
 

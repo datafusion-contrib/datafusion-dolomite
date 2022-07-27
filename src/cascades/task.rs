@@ -256,7 +256,7 @@ impl OptimizeInputsTask {
         })?;
 
         let operator_cost = self.operator_cost(ctx)?;
-        let new_state = if memo[self.group_expr_id].inputs().len() == 0 {
+        let new_state = if memo[self.group_expr_id].inputs().is_empty() {
             // Without children we should go to optimize self directly
             OptimizeSelf {
                 derive_results,
@@ -344,7 +344,7 @@ impl OptimizeInputsTask {
                     &derive_results[derive_idx].input_required_props[input_idx];
 
                 if let Some(winner) =
-                    ctx.memo[input_group_id].winner(&input_required_prop)
+                    ctx.memo[input_group_id].winner(input_required_prop)
                 {
                     // Found a good plan for this required property
                     best_input_group_expr.push(winner.group_expr_id);
@@ -447,7 +447,7 @@ impl OptimizeInputsTask {
                             ctx.memo[self.group_expr_id.group_id].update_winner(
                                 self.group_expr_id,
                                 &enforcer.output_prop,
-                                &vec![cur_output_prop.clone()],
+                                &[cur_output_prop.clone()],
                                 accumulated_cost,
                             );
                             cur_output_prop = enforcer.output_prop.clone();

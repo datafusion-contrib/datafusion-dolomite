@@ -63,7 +63,7 @@ impl OperatorTrait for Join {
             .group_at(optimizer.expr_at(handle.clone()).input_at(0, optimizer))
             .logical_prop();
         let right_prop = optimizer
-            .group_at(optimizer.expr_at(handle.clone()).input_at(1, optimizer))
+            .group_at(optimizer.expr_at(handle).input_at(1, optimizer))
             .logical_prop();
 
         let schema = left_prop.schema().join(right_prop.schema())?;
