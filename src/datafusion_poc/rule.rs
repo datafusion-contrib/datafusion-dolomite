@@ -26,7 +26,7 @@ impl OptimizerRule for DFOptimizerAdapterRule {
     fn optimize(
         &self,
         df_plan: &LogicalPlan,
-        _optimizer_config: &OptimizerConfig,
+        _optimizer_config: &mut OptimizerConfig,
     ) -> datafusion::common::Result<LogicalPlan> {
         println!("Beginning to execute heuristic optimizer");
         let plan = Plan::new(Arc::new(
