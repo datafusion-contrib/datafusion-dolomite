@@ -710,11 +710,13 @@ impl Group {
 }
 
 /// Base group expression information.
-#[derive(Eq, PartialEq, Hash, Debug, Clone)]
+#[derive(PartialEq, Hash, Debug, Clone)]
 pub(super) struct GroupExprKey {
     pub(super) operator: Operator,
     pub(super) inputs: Vec<GroupId>,
 }
+
+impl Eq for GroupExprKey {}
 
 pub struct GroupExpr {
     /// Can be used to uniquely identify a group expression.
@@ -849,8 +851,7 @@ pub(super) struct WinnerInput {
 #[cfg(test)]
 mod tests {
 
-    use datafusion::logical_expr::col;
-    use datafusion::logical_plan::binary_expr;
+    use datafusion::logical_expr::{binary_expr, col};
     use datafusion::prelude::JoinType;
 
     use crate::cascades::memo::Memo;

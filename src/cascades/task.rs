@@ -623,8 +623,9 @@ mod tests {
     use crate::plan::LogicalPlanBuilder;
     use crate::properties::PhysicalPropertySet;
     use crate::rules::CommutateJoinRule;
+    use datafusion::logical_expr::binary_expr;
+    use datafusion::logical_plan::JoinType;
     use datafusion::logical_plan::Operator::Eq;
-    use datafusion::logical_plan::{binary_expr, JoinType};
     use datafusion::prelude::col;
 
     #[test]

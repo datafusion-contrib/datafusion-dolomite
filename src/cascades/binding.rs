@@ -137,8 +137,8 @@ mod tests {
     use crate::properties::PhysicalPropertySet;
     use crate::rules::OptExprNode::GroupHandleNode;
     use crate::rules::{any, pattern, OptExpression, PatterBuilder};
+    use datafusion::logical_expr::binary_expr;
     use datafusion::logical_expr::Operator::Eq;
-    use datafusion::logical_plan::binary_expr;
     use datafusion::prelude::{col, JoinType};
 
     fn create_optimizer(plan: Plan) -> CascadesOptimizer {

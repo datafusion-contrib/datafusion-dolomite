@@ -24,7 +24,7 @@ use crate::optimizer::Optimizer;
 use crate::properties::LogicalProperty;
 use enum_dispatch::enum_dispatch;
 
-#[derive(Clone, Debug, Hash, Eq, PartialEq, EnumAsInner)]
+#[derive(Clone, Debug, Hash, PartialEq, EnumAsInner)]
 pub enum Operator {
     Logical(LogicalOperator),
     Physical(PhysicalOperator),

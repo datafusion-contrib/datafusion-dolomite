@@ -10,7 +10,7 @@ use crate::properties::{LogicalProperty, PhysicalPropertySet};
 use crate::Expr;
 
 /// Logical join operator.
-#[derive(Clone, Debug, Hash, Eq, PartialEq)]
+#[derive(Clone, Debug, Hash, PartialEq)]
 pub struct Join {
     join_type: JoinType,
     expr: Expr,

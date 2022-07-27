@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-datafusion = {git = "https://github.com/liurenjie1024/arrow-datafusion.git", branch = "renjie/opt_test"}
-datafusion-physical-expr = {git = "https://github.com/liurenjie1024/arrow-datafusion.git", branch = "renjie/opt_test"}
+datafusion = { git = "https://github.com/apache/arrow-datafusion", rev = "884101e" }
+datafusion-physical-expr = { git = "https://github.com/apache/arrow-datafusion", rev = "884101e" }
 thiserror = "1"
 enum_dispatch = "0.3"
 log = "^0.4"

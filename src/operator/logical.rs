@@ -4,7 +4,7 @@ use crate::operator::{Join, Limit, Projection, TableScan};
 use enum_dispatch::enum_dispatch;
 
 /// Logical relational operator.
-#[derive(Clone, Debug, Hash, Eq, PartialEq, EnumAsInner)]
+#[derive(Clone, Debug, Hash, PartialEq, EnumAsInner)]
 #[enum_dispatch]
 pub enum LogicalOperator {
     LogicalLimit(Limit),

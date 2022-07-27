@@ -3,9 +3,9 @@ use crate::optimizer::{Optimizer, OptimizerContext};
 use crate::plan::{Plan, PlanNode};
 use crate::rules::RuleImpl;
 use datafusion::common::DataFusionError;
-use datafusion::execution::context::ExecutionProps;
 use datafusion::logical_expr::LogicalPlan;
 use datafusion::optimizer::optimizer::OptimizerRule;
+use datafusion::optimizer::OptimizerConfig;
 use std::sync::Arc;
 
 /// An adapter converts [`HeuristicOptimizer`] into datafusion's optimizer rule.
@@ -26,7 +26,7 @@ impl OptimizerRule for DFOptimizerAdapterRule {
     fn optimize(
         &self,
         df_plan: &LogicalPlan,
-        _execution_props: &ExecutionProps,
+        _optimizer_config: &mut OptimizerConfig,
     ) -> datafusion::common::Result<LogicalPlan> {
         println!("Beginning to execute heuristic optimizer");
         let plan = Plan::new(Arc::new(
@@ -67,11 +67,11 @@ mod tests {
     use datafusion::catalog::schema::MemorySchemaProvider;
     use datafusion::common::ToDFSchema;
     use datafusion::datasource::empty::EmptyTable;
-    use datafusion::execution::context::ExecutionProps;
     use datafusion::logical_expr::col;
     use datafusion::logical_plan::plan::{DefaultTableSource, TableScan as DFTableScan};
     use datafusion::logical_plan::{LogicalPlan, LogicalPlanBuilder};
     use datafusion::optimizer::optimizer::OptimizerRule;
+    use datafusion::optimizer::OptimizerConfig;
     use serde_json::Value;
     use std::sync::Arc;
 
@@ -115,15 +115,15 @@ mod tests {
                 projection: None,
                 projected_schema: (&*schema).clone().to_dfschema_ref().unwrap(),
                 filters: vec![],
-                limit: None,
+                fetch: None,
             };
 
             LogicalPlanBuilder::from(LogicalPlan::TableScan(df_scan))
-                .limit(10)
+                .limit(None, Some(10))
                 .unwrap()
                 .project(vec![col("c1")])
                 .unwrap()
-                .limit(5)
+                .limit(None, Some(5))
                 .unwrap()
                 .build()
                 .unwrap()
@@ -148,7 +148,7 @@ mod tests {
                 optimizer_context,
             };
 
-            rule.optimize(&df_logical_plan, &ExecutionProps::new())
+            rule.optimize(&df_logical_plan, &mut OptimizerConfig::new())
                 .unwrap()
         };
 
@@ -163,7 +163,7 @@ mod tests {
                 projection: None,
                 projected_schema: (&*schema).clone().to_dfschema_ref().unwrap(),
                 filters: vec![],
-                limit: Some(5),
+                fetch: Some(5),
             };
 
             LogicalPlanBuilder::from(LogicalPlan::TableScan(df_scan))

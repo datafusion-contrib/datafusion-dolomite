@@ -85,9 +85,9 @@ mod tests {
     use crate::plan::{LogicalPlanBuilder, PhysicalPlanBuilder};
     use crate::properties::PhysicalPropertySet;
     use crate::rules::{CommutateJoinRule, Join2HashJoinRule, Scan2TableScanRule};
-    use datafusion::logical_expr::col;
+    use datafusion::logical_expr::{binary_expr, col};
+    use datafusion::logical_plan::JoinType;
     use datafusion::logical_plan::Operator::Eq;
-    use datafusion::logical_plan::{binary_expr, JoinType};
 
     #[test]
     fn test_optimize_join() {
