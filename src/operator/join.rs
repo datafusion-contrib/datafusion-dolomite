@@ -2,7 +2,9 @@ use datafusion::prelude::JoinType;
 
 use crate::cost::Cost;
 use crate::error::OptResult;
-use crate::operator::{DerivePropContext, DerivePropResult, OperatorTrait, PhysicalOperatorTrait};
+use crate::operator::{
+    DerivePropContext, DerivePropResult, OperatorTrait, PhysicalOperatorTrait,
+};
 use crate::optimizer::{OptExpr, OptGroup, Optimizer};
 use crate::properties::{LogicalProperty, PhysicalPropertySet};
 use crate::Expr;
@@ -42,18 +44,26 @@ impl PhysicalOperatorTrait for Join {
         }])
     }
 
-    fn cost<O: Optimizer>(&self, _expr_handle: O::ExprHandle, _optimizer: &O) -> OptResult<Cost> {
+    fn cost<O: Optimizer>(
+        &self,
+        _expr_handle: O::ExprHandle,
+        _optimizer: &O,
+    ) -> OptResult<Cost> {
         Ok(Cost::from(1.0))
     }
 }
 
 impl OperatorTrait for Join {
-    fn derive_logical_prop<O: Optimizer>(&self,
-                                         handle: O::ExprHandle,
-                                         optimizer: &O) -> OptResult<LogicalProperty> {
-        let left_prop = optimizer.group_at(optimizer.expr_at(handle.clone()).input_at(0, optimizer))
+    fn derive_logical_prop<O: Optimizer>(
+        &self,
+        handle: O::ExprHandle,
+        optimizer: &O,
+    ) -> OptResult<LogicalProperty> {
+        let left_prop = optimizer
+            .group_at(optimizer.expr_at(handle.clone()).input_at(0, optimizer))
             .logical_prop();
-        let right_prop = optimizer.group_at(optimizer.expr_at(handle.clone()).input_at(1, optimizer))
+        let right_prop = optimizer
+            .group_at(optimizer.expr_at(handle).input_at(1, optimizer))
             .logical_prop();
 
         let schema = left_prop.schema().join(right_prop.schema())?;

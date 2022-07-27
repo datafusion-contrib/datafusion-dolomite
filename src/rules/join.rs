@@ -26,7 +26,7 @@ lazy_static! {
 }
 
 /// Commutate inner join inputs.
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct CommutateJoinRule {}
 
 impl CommutateJoinRule {
@@ -49,8 +49,9 @@ impl Rule for CommutateJoinRule {
         _ctx: &O,
         result: &mut RuleResult<O>,
     ) -> OptResult<()> {
-        let op = input.get_operator(&_ctx)?.clone();
-        let ret = OptExpression::with_operator(op, vec![input[1].clone(), input[0].clone()]);
+        let op = input.get_operator(_ctx)?.clone();
+        let ret =
+            OptExpression::with_operator(op, vec![input[1].clone(), input[0].clone()]);
         result.add(ret);
         Ok(())
     }
@@ -69,7 +70,7 @@ impl Rule for CommutateJoinRule {
 }
 
 /// Transforms equi join to hash join.
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Join2HashJoinRule {}
 
 impl Join2HashJoinRule {
@@ -78,10 +79,7 @@ impl Join2HashJoinRule {
     }
 
     fn matches(op: &Operator) -> bool {
-        match op {
-            Logical(LogicalJoin(_)) => true,
-            _ => false,
-        }
+        matches!(op, Logical(LogicalJoin(_)))
     }
 }
 
@@ -92,7 +90,7 @@ impl Rule for Join2HashJoinRule {
         _ctx: &O,
         result: &mut RuleResult<O>,
     ) -> OptResult<()> {
-        if let Logical(LogicalJoin(join)) = input.get_operator(&_ctx)? {
+        if let Logical(LogicalJoin(join)) = input.get_operator(_ctx)? {
             let hash_join_op = Physical(PhysicalHashJoin(join.clone()));
             let ret = input.clone_with_inputs(hash_join_op);
 

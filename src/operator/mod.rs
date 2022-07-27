@@ -47,7 +47,7 @@ impl OperatorTrait for Operator {
     ) -> OptResult<LogicalProperty> {
         match self {
             Logical(op) => op.derive_logical_prop(_handle, _optimizer),
-            Physical(op) => op.derive_logical_prop(_handle, _optimizer)
+            Physical(op) => op.derive_logical_prop(_handle, _optimizer),
         }
     }
 }

@@ -57,7 +57,11 @@ impl<'a, 'b> IntoIterator for Binding<'a, 'b> {
 }
 
 impl<'a, 'b> Binding<'a, 'b> {
-    pub(super) fn new(group_expr_id: GroupExprId, pattern: &'b Pattern, memo: &'a Memo) -> Self {
+    pub(super) fn new(
+        group_expr_id: GroupExprId,
+        pattern: &'b Pattern,
+        memo: &'a Memo,
+    ) -> Self {
         Self {
             group_expr_ids: Rc::new(vec![group_expr_id]),
             memo,
@@ -70,9 +74,9 @@ impl<'a, 'b> Binding<'a, 'b> {
             self.group_expr_ids
                 .iter()
                 .filter(|group_expr_id| {
-                    self.memo[**group_expr_id].matches_without_children(&self.pattern)
+                    self.memo[**group_expr_id].matches_without_children(self.pattern)
                 })
-                .map(|g| *g)
+                .copied()
                 .collect()
         };
 
@@ -85,15 +89,17 @@ impl<'a, 'b> Binding<'a, 'b> {
                         .iter()
                         .zip(logical_group_expr.input_group_ids())
                         .map(|(pattern, group_id)| Binding {
-                            group_expr_ids: Rc::new(self.memo[group_id].logical_group_expr_ids()),
+                            group_expr_ids: Rc::new(
+                                self.memo[group_id].logical_group_expr_ids(),
+                            ),
                             pattern,
                             memo: self.memo,
                         })
                         .multi_cartesian_product();
 
-                    children_bindings
-                        .into_iter()
-                        .map(move |inputs| OptExpression::with_expr_handle(group_expr_id, inputs))
+                    children_bindings.into_iter().map(move |inputs| {
+                        OptExpression::with_expr_handle(group_expr_id, inputs)
+                    })
                 })
                 .collect::<Vec<OptExpr>>()
                 .into_iter()
@@ -162,7 +168,8 @@ mod tests {
             optimizer.memo[optimizer.memo.root_group_id()].logical_group_expr_ids()[0];
 
         let mut bindings =
-            Binding::new(root_group_expr_id, &table_scan_pattern, &optimizer.memo).into_iter();
+            Binding::new(root_group_expr_id, &table_scan_pattern, &optimizer.memo)
+                .into_iter();
 
         // First binding
         {
@@ -200,7 +207,7 @@ mod tests {
 
             builder
                 .scan(None, "t1")
-                .projection(vec![col("c1")] )
+                .projection(vec![col("c1")])
                 .limit(10)
                 .join(
                     JoinType::Inner,
@@ -219,12 +226,12 @@ mod tests {
 
         // insert equal plan
         {
-            let left_child = OptExpression::<CascadesOptimizer>::from(Logical(LogicalScan(
-                TableScan::new("t2"),
-            )));
-            let right_child = OptExpression::<CascadesOptimizer>::from(Logical(LogicalScan(
-                TableScan::new("t1"),
-            )));
+            let left_child = OptExpression::<CascadesOptimizer>::from(Logical(
+                LogicalScan(TableScan::new("t2")),
+            ));
+            let right_child = OptExpression::<CascadesOptimizer>::from(Logical(
+                LogicalScan(TableScan::new("t1")),
+            ));
             let opt_expr = OptExpression::with_operator(
                 Logical(LogicalJoin(Join::new(
                     JoinType::Inner,
@@ -246,7 +253,8 @@ mod tests {
             .finish();
 
         let mut bindings =
-            Binding::new(root_group_expr_id, &table_scan_pattern, &optimizer.memo).into_iter();
+            Binding::new(root_group_expr_id, &table_scan_pattern, &optimizer.memo)
+                .into_iter();
 
         // First binding
         {

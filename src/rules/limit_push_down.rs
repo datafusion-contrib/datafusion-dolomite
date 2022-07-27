@@ -31,7 +31,7 @@ lazy_static! {
     };
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct PushLimitOverProjectionRule {}
 
 impl PushLimitOverProjectionRule {
@@ -47,8 +47,8 @@ impl Rule for PushLimitOverProjectionRule {
         _ctx: &O,
         result: &mut RuleResult<O>,
     ) -> OptResult<()> {
-        let limit = opt_expr.get_operator(&_ctx)?;
-        let projection = opt_expr[0].get_operator(&_ctx)?;
+        let limit = opt_expr.get_operator(_ctx)?;
+        let projection = opt_expr[0].get_operator(_ctx)?;
 
         let new_limit = opt_expr[0].clone_with_inputs(limit.clone());
         let ret = OptExpression::with_operator(projection.clone(), vec![new_limit]);
@@ -71,7 +71,7 @@ impl Rule for PushLimitOverProjectionRule {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct RemoveLimitRule {}
 
 impl RemoveLimitRule {
@@ -88,11 +88,12 @@ impl Rule for RemoveLimitRule {
         result: &mut RuleResult<O>,
     ) -> OptResult<()> {
         if let (Logical(LogicalLimit(limit1)), Logical(LogicalLimit(limit2))) =
-            (input.get_operator(&_ctx)?, input[0].get_operator(&_ctx)?)
+            (input.get_operator(_ctx)?, input[0].get_operator(_ctx)?)
         {
             let new_limit = min(limit1.limit(), limit2.limit());
 
-            let ret = input[0].clone_with_inputs(Logical(LogicalLimit(Limit::new(new_limit))));
+            let ret =
+                input[0].clone_with_inputs(Logical(LogicalLimit(Limit::new(new_limit))));
 
             result.add(ret);
             Ok(())
@@ -114,7 +115,7 @@ impl Rule for RemoveLimitRule {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct PushLimitToTableScanRule {}
 
 impl PushLimitToTableScanRule {
@@ -131,12 +132,12 @@ impl Rule for PushLimitToTableScanRule {
         result: &mut RuleResult<O>,
     ) -> OptResult<()> {
         if let (Logical(LogicalLimit(limit)), Logical(LogicalScan(scan))) =
-            (input.get_operator(&ctx)?, input[0].get_operator(&ctx)?)
+            (input.get_operator(ctx)?, input[0].get_operator(ctx)?)
         {
             let new_limit = scan
                 .limit()
                 .map(|l1| min(l1, limit.limit()))
-                .unwrap_or(limit.limit());
+                .unwrap_or_else(|| limit.limit());
 
             let ret = OptExpression::from(Logical(LogicalScan(TableScan::with_limit(
                 scan.table_name(),
@@ -166,19 +167,20 @@ impl Rule for PushLimitToTableScanRule {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
     use datafusion::arrow::datatypes::Schema;
     use datafusion::catalog::schema::MemorySchemaProvider;
     use datafusion::datasource::empty::EmptyTable;
     use datafusion::logical_expr::col;
     use serde_json::Value;
+    use std::sync::Arc;
 
     use crate::heuristic::{HepOptimizer, MatchOrder};
     use crate::optimizer::{Optimizer, OptimizerContext};
     use crate::plan::{LogicalPlanBuilder, Plan};
 
     use crate::rules::{
-        PushLimitOverProjectionRule, PushLimitToTableScanRule, RemoveLimitRule, Rule, RuleImpl,
+        PushLimitOverProjectionRule, PushLimitToTableScanRule, RemoveLimitRule, Rule,
+        RuleImpl,
     };
 
     fn build_hep_optimizer(rules: Vec<RuleImpl>, plan: Plan) -> HepOptimizer {
@@ -209,17 +211,19 @@ mod tests {
             Arc::new(schema)
         };
 
-        let table_provider = Arc::new(EmptyTable::new(Arc::new
-            ((&*schema).clone().into())));
-
+        let table_provider = Arc::new(EmptyTable::new(Arc::new((&*schema).clone())));
 
         let optimizer_context = OptimizerContext {
-            catalog: Arc::new(MemorySchemaProvider::new())
+            catalog: Arc::new(MemorySchemaProvider::new()),
         };
 
-        optimizer_context.catalog.register_table("t1".to_string(), table_provider.clone()).unwrap();
+        optimizer_context
+            .catalog
+            .register_table("t1".to_string(), table_provider)
+            .unwrap();
 
-        HepOptimizer::new(MatchOrder::TopDown, 1000, rules, plan, optimizer_context).unwrap()
+        HepOptimizer::new(MatchOrder::TopDown, 1000, rules, plan, optimizer_context)
+            .unwrap()
     }
 
     #[test]
@@ -227,7 +231,7 @@ mod tests {
         let original_plan = LogicalPlanBuilder::new()
             .scan(None, "t1".to_string())
             .limit(5)
-            .projection(vec![col("c1")] )
+            .projection(vec![col("c1")])
             .limit(10)
             .build();
 
@@ -246,19 +250,15 @@ mod tests {
         let expected_plan = {
             let raw_plan = LogicalPlanBuilder::new()
                 .scan(Some(5), "t1".to_string())
-                .projection(vec![col("c1")] )
+                .projection(vec![col("c1")])
                 .build();
 
-            let optimizer = build_hep_optimizer(
-                vec![
-                ],
-                raw_plan,
-            );
+            let optimizer = build_hep_optimizer(vec![], raw_plan);
 
             optimizer.find_best_plan().unwrap()
         };
 
-        assert_eq!(optimized_plan,  expected_plan);
+        assert_eq!(optimized_plan, expected_plan);
     }
 
     #[test]
@@ -266,11 +266,11 @@ mod tests {
         let original_plan = LogicalPlanBuilder::new()
             .scan(None, "t1".to_string())
             .limit(5)
-            .projection(vec![col("c1")] )
+            .projection(vec![col("c1")])
             .limit(10)
             .build();
 
         let rule = PushLimitOverProjectionRule::new();
-        assert!((rule.pattern().predict)(&original_plan.root().operator()));
+        assert!((rule.pattern().predict)(original_plan.root().operator()));
     }
 }

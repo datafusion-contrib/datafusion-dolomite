@@ -10,7 +10,7 @@ pub struct LogicalProperty {
 impl LogicalProperty {
     pub fn new(schema: DFSchema) -> Self {
         Self {
-            schema: Arc::new(schema)
+            schema: Arc::new(schema),
         }
     }
 

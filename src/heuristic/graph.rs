@@ -7,7 +7,7 @@ use petgraph::visit::Bfs;
 use petgraph::{Directed, Direction};
 
 use crate::heuristic::{HepOptimizer, MatchOrder};
-use crate::operator::{Operator};
+use crate::operator::Operator;
 use crate::optimizer::{OptExpr, OptExprHandle, OptGroup, OptGroupHandle};
 use crate::plan::{Plan, PlanNode, PlanNodeBuilder, PlanNodeId, PlanNodeRef};
 use crate::properties::{LogicalProperty, PhysicalPropertySet};
@@ -41,7 +41,6 @@ impl PlanGraph {
             MatchOrder::BottomUp => Box::new(self.bottom_up_node_iters()),
         }
     }
-
 
     /// Return node ids in bottom up order.
     fn bottom_up_node_iters(&self) -> impl Iterator<Item = HepNodeId> {

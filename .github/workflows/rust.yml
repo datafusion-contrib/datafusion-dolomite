@@ -1,0 +1,108 @@
+name: Rust
+
+on:
+  # always trigger
+  push:
+  pull_request:
+
+jobs:
+  # Check crate compiles
+  linux-build-test:
+    name: Build and test on AMD64 Rust ${{ matrix.rust }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [amd64]
+        rust: [stable]
+    container:
+      image: ${{ matrix.arch }}/rust
+      env:
+        # Disable full debug symbol generation to speed up CI build and keep memory down
+        # "1" means line tables only, which is useful for panic tracebacks.
+        RUSTFLAGS: "-C debuginfo=1"
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache Cargo
+        uses: actions/cache@v3
+        with:
+          # these represent dependencies downloaded by cargo
+          # and thus do not depend on the OS, arch nor rust version.
+          path: /github/home/.cargo
+          key: cargo-cache-
+      - name: Setup toolchain
+        run: |
+          rustup toolchain install stable
+          rustup default stable
+          rustup component add rustfmt
+          rustup component add clippy
+          cargo install cargo-tomlfmt
+      - name: Check workspace in debug mode
+        run: |
+          cargo check
+        env:
+          CARGO_HOME: "/github/home/.cargo"
+          CARGO_TARGET_DIR: "/github/home/target/debug"
+
+      - name: Check workspace in release mode
+        run: |
+          cargo check --release
+        env:
+          CARGO_HOME: "/github/home/.cargo"
+          CARGO_TARGET_DIR: "/github/home/target/release"
+
+      - name: Check format
+        run: |
+          cargo fmt --all -- --check
+        env:
+          CARGO_HOME: "/github/home/.cargo"
+          CARGO_TARGET_DIR: "/github/home/target"
+
+      - name: Clippy check
+        run: |
+          cargo clippy --all-targets --workspace -- -D warnings
+        env:
+          CARGO_HOME: "/github/home/.cargo"
+          CARGO_TARGET_DIR: "/github/home/target"
+
+      - name: Run tests
+        run: |
+          cargo test
+        env:
+          CARGO_HOME: "/github/home/.cargo"
+          CARGO_TARGET_DIR: "/github/home/target"
+
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [ amd64 ]
+        rust: [ stable ]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Setup Rust toolchain
+        run: |
+          rustup toolchain install ${{ matrix.rust }}
+          rustup default ${{ matrix.rust }}
+          rustup component add rustfmt clippy
+      - name: Cache Cargo
+        uses: actions/cache@v3
+        with:
+          path: /home/runner/.cargo
+          # this key is not equal because the user is different than on a container (runner vs github)
+          key: cargo-coverage-cache3-
+      - name: Run coverage
+        run: |
+          rustup toolchain install stable
+          rustup default stable
+          cargo install --version 0.20.1 cargo-tarpaulin
+          cargo tarpaulin --all --out Xml
+        env:
+          CARGO_HOME: "/home/runner/.cargo"
+          CARGO_TARGET_DIR: "/home/runner/target"
+      - name: Report coverage
+        continue-on-error: true
+        run: bash <(curl -s https://codecov.io/bash)

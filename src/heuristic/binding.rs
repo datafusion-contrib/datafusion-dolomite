@@ -33,10 +33,14 @@ impl<'a, 'b> Binding<'a, 'b> {
             }
 
             let mut inputs = Vec::with_capacity(children.len());
-            for idx in 0..expr.inputs_len(self.optimizer) {
+            for (idx, pattern) in children
+                .iter()
+                .enumerate()
+                .take(expr.inputs_len(self.optimizer))
+            {
                 if let Some(opt_input) = Binding::new(
                     expr.input_at(idx, self.optimizer),
-                    &children[idx],
+                    pattern,
                     self.optimizer,
                 )
                 .next()
@@ -47,21 +51,17 @@ impl<'a, 'b> Binding<'a, 'b> {
                 }
             }
 
-            Some(OptExpression::with_expr_handle(
-                self.expr_handle.clone(),
-                inputs,
-            ))
+            Some(OptExpression::with_expr_handle(self.expr_handle, inputs))
         } else {
             // Collect leaf node's inputs
             let current_node = self.optimizer.expr_at(self.expr_handle);
             let inputs = (0..current_node.inputs_len(self.optimizer))
                 .map(|input_idx| current_node.input_at(input_idx, self.optimizer))
-                .map(|group_id| OptExpression::<HepOptimizer>::with_group_handle(group_id))
+                .map(|group_id| {
+                    OptExpression::<HepOptimizer>::with_group_handle(group_id)
+                })
                 .collect::<Vec<OptExpression<HepOptimizer>>>();
-            Some(OptExpression::with_expr_handle(
-                self.expr_handle.clone(),
-                inputs,
-            ))
+            Some(OptExpression::with_expr_handle(self.expr_handle, inputs))
         }
     }
 }

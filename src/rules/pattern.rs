@@ -39,9 +39,12 @@ impl Pattern {
         }
     }
 
-    pub fn new<I: IntoIterator<Item = Pattern>>(matcher: OperatorMatcher, children: I) -> Pattern {
+    pub fn new<I: IntoIterator<Item = Pattern>>(
+        matcher: OperatorMatcher,
+        children: I,
+    ) -> Pattern {
         let children = children.into_iter().collect::<Vec<Pattern>>();
-        let children_pattern = if children.len() > 0 {
+        let children_pattern = if !children.is_empty() {
             Some(children)
         } else {
             None

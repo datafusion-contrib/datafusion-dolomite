@@ -4,7 +4,7 @@ use std::mem::swap;
 
 use crate::cascades::binding::Binding;
 use crate::cascades::memo::GroupExprKey;
-use crate::cascades::task::OptimizeInputsTaskState::{
+use crate::cascades::task::OptimizeInputsState::{
     AfterOptimizeInput, BeforeOptimizeInput, Init, Invalid, OptimizeSelf,
 };
 use crate::cascades::task::TaskControl::{Done, Yield};
@@ -21,11 +21,11 @@ use itertools::Itertools;
 
 #[enum_dispatch]
 pub(super) enum TaskImpl {
-    ApplyRuleTask,
-    OptimizeExpressionTask,
-    OptimizeInputsTask,
-    ExploreGroupTask,
-    OptimizeGroupTask,
+    ApplyRule,
+    OptimizeExpression,
+    OptimizeInputs,
+    ExploreGroup,
+    OptimizeGroup,
 }
 
 enum TaskControl {
@@ -56,8 +56,7 @@ trait Task {
 }
 
 pub(super) fn schedule(context: &mut CascadesOptimizer, root: TaskImpl) -> OptResult<()> {
-    let mut tasks = Vec::new();
-    tasks.push(root);
+    let mut tasks = vec![root];
 
     while let Some(cur_task) = tasks.pop() {
         match cur_task.execute(context)? {
@@ -77,7 +76,7 @@ pub(super) fn schedule(context: &mut CascadesOptimizer, root: TaskImpl) -> OptRe
     Ok(())
 }
 
-pub(super) struct ApplyRuleTask {
+pub(super) struct ApplyRule {
     rule: RuleImpl,
     /// The logical group expression to apply rule to.
     group_expr_id: GroupExprId,
@@ -85,7 +84,7 @@ pub(super) struct ApplyRuleTask {
     upper_bound: Cost,
 }
 
-impl Task for ApplyRuleTask {
+impl Task for ApplyRule {
     fn execute(self, ctx: &mut CascadesOptimizer) -> OptResult<TaskControl> {
         if ctx.memo[self.group_expr_id].is_rule_applied(self.rule.rule_id()) {
             return Ok(TaskControl::done());
@@ -112,13 +111,15 @@ impl Task for ApplyRuleTask {
                     self.rule, self.group_expr_id, result_node
                 );
                 let group_expr_id = {
-                    ctx.memo
-                        .insert_opt_expression(&result_node, Some(self.group_expr_id.group_id))
+                    ctx.memo.insert_opt_expression(
+                        &result_node,
+                        Some(self.group_expr_id.group_id),
+                    )
                 };
 
                 if ctx.memo[group_expr_id].is_logical() {
                     other_tasks.push(
-                        OptimizeExpressionTask {
+                        OptimizeExpression {
                             group_expr_id: self.group_expr_id,
                             required_prop: self.required_prop.clone(),
                             upper_bound: self.upper_bound,
@@ -127,7 +128,7 @@ impl Task for ApplyRuleTask {
                     );
                 } else {
                     other_tasks.push(
-                        OptimizeInputsTask {
+                        OptimizeInputs {
                             group_expr_id,
                             required_prop: self.required_prop.clone(),
                             upper_bound: self.upper_bound,
@@ -153,14 +154,14 @@ impl Task for ApplyRuleTask {
 ///
 /// If `exploring` is true, only exploring rules are applied.
 /// Otherwise both exploration and implementation rules will be applied.
-pub(super) struct OptimizeExpressionTask {
+pub(super) struct OptimizeExpression {
     /// Logical group expression to be optimized.
     group_expr_id: GroupExprId,
     required_prop: PhysicalPropertySet,
     upper_bound: Cost,
 }
 
-impl Task for OptimizeExpressionTask {
+impl Task for OptimizeExpression {
     fn execute(self, ctx: &mut CascadesOptimizer) -> OptResult<TaskControl> {
         let group_expr = &ctx.memo[self.group_expr_id];
         let apply_rule_tasks = ctx
@@ -169,7 +170,7 @@ impl Task for OptimizeExpressionTask {
             .filter(|rule| !group_expr.is_rule_applied(rule.rule_id()))
             .sorted_by_key(|rule| rule.rule_promise() as u32)
             .map(|rule| {
-                ApplyRuleTask {
+                ApplyRule {
                     rule: rule.clone(),
                     group_expr_id: self.group_expr_id,
                     required_prop: self.required_prop.clone(),
@@ -182,7 +183,7 @@ impl Task for OptimizeExpressionTask {
         let explore_input_group_tasks = group_expr
             .input_group_ids()
             .map(|group_id| {
-                ExploreGroupTask {
+                ExploreGroup {
                     group_id,
                     required_prop: self.required_prop.clone(),
                     upper_bound: self.upper_bound,
@@ -205,17 +206,17 @@ impl Task for OptimizeExpressionTask {
 
 /// Optimize physical group expression for required property.
 #[derive(Debug)]
-pub(super) struct OptimizeInputsTask {
+pub(super) struct OptimizeInputs {
     /// Physical group expression id to be optimized.
     group_expr_id: GroupExprId,
     /// Required property
     required_prop: PhysicalPropertySet,
     upper_bound: Cost,
-    state: OptimizeInputsTaskState,
+    state: OptimizeInputsState,
 }
 
 #[derive(Debug)]
-enum OptimizeInputsTaskState {
+enum OptimizeInputsState {
     Init,
     BeforeOptimizeInput {
         derive_results: Vec<DerivePropResult>,
@@ -240,7 +241,7 @@ enum OptimizeInputsTaskState {
     Invalid,
 }
 
-impl OptimizeInputsTask {
+impl OptimizeInputs {
     fn do_init(mut self, ctx: &mut CascadesOptimizer) -> OptResult<TaskControl> {
         println!("Current state {:?} for OptimizeInputsTask", &self);
         let memo = &ctx.memo;
@@ -254,7 +255,7 @@ impl OptimizeInputsTask {
         })?;
 
         let operator_cost = self.operator_cost(ctx)?;
-        let new_state = if memo[self.group_expr_id].inputs().len() == 0 {
+        let new_state = if memo[self.group_expr_id].inputs().is_empty() {
             // Without children we should go to optimize self directly
             OptimizeSelf {
                 derive_results,
@@ -268,7 +269,9 @@ impl OptimizeInputsTask {
                 derive_idx: 0,
                 input_idx: 0,
                 accumulated_cost: operator_cost,
-                best_input_group_expr: Vec::with_capacity(memo[self.group_expr_id].inputs_len(ctx)),
+                best_input_group_expr: Vec::with_capacity(
+                    memo[self.group_expr_id].inputs_len(ctx),
+                ),
             }
         };
 
@@ -280,7 +283,10 @@ impl OptimizeInputsTask {
         })
     }
 
-    fn do_before_optimize_input(mut self, ctx: &CascadesOptimizer) -> OptResult<TaskControl> {
+    fn do_before_optimize_input(
+        mut self,
+        ctx: &CascadesOptimizer,
+    ) -> OptResult<TaskControl> {
         println!("Current state {:?} for OptimizeInputsTask", &self);
         let mut new_state = Invalid;
         swap(&mut new_state, &mut self.state);
@@ -300,7 +306,7 @@ impl OptimizeInputsTask {
                     best_input_group_expr,
                 };
 
-                let task = OptimizeGroupTask {
+                let task = OptimizeGroup {
                     group_id: ctx.memo[self.group_expr_id].input_at(input_idx, ctx),
                     required_prop: self.required_prop.clone(),
                     upper_bound: self.upper_bound - accumulated_cost,
@@ -316,7 +322,10 @@ impl OptimizeInputsTask {
         }
     }
 
-    fn do_after_optimize_input(mut self, ctx: &CascadesOptimizer) -> OptResult<TaskControl> {
+    fn do_after_optimize_input(
+        mut self,
+        ctx: &CascadesOptimizer,
+    ) -> OptResult<TaskControl> {
         println!("Current state {:?} for OptimizeInputsTask", &self);
         let mut new_state = Invalid;
         swap(&mut new_state, &mut self.state);
@@ -328,11 +337,13 @@ impl OptimizeInputsTask {
                 mut accumulated_cost,
                 mut best_input_group_expr,
             } => {
-                let input_group_id = ctx.memo[self.group_expr_id].input_at(input_idx, ctx);
+                let input_group_id =
+                    ctx.memo[self.group_expr_id].input_at(input_idx, ctx);
                 let input_required_prop =
                     &derive_results[derive_idx].input_required_props[input_idx];
 
-                if let Some(winner) = ctx.memo[input_group_id].winner(&input_required_prop) {
+                if let Some(winner) = ctx.memo[input_group_id].winner(input_required_prop)
+                {
                     // Found a good plan for this required property
                     best_input_group_expr.push(winner.group_expr_id);
                     accumulated_cost += winner.lowest_cost;
@@ -365,7 +376,9 @@ impl OptimizeInputsTask {
                             derive_idx: derive_idx + 1,
                             input_idx: 0,
                             accumulated_cost: self.operator_cost(ctx)?,
-                            best_input_group_expr: Vec::with_capacity(self.inputs_len(ctx)),
+                            best_input_group_expr: Vec::with_capacity(
+                                self.inputs_len(ctx),
+                            ),
                         }
                     }
                 }
@@ -383,6 +396,7 @@ impl OptimizeInputsTask {
         }
     }
 
+    #[allow(clippy::never_loop)]
     fn do_optimize_self(mut self, ctx: &mut CascadesOptimizer) -> OptResult<TaskControl> {
         println!("Current state {:?} for OptimizeInputsTask", &self);
         let mut new_state = Invalid;
@@ -427,11 +441,12 @@ impl OptimizeInputsTask {
                                 Some(self.group_expr_id.group_id),
                             );
 
-                            accumulated_cost += enforcer.operator.cost(group_expr_id, ctx)?;
+                            accumulated_cost +=
+                                enforcer.operator.cost(group_expr_id, ctx)?;
                             ctx.memo[self.group_expr_id.group_id].update_winner(
                                 self.group_expr_id,
                                 &enforcer.output_prop,
-                                &vec![cur_output_prop.clone()],
+                                &[cur_output_prop.clone()],
                                 accumulated_cost,
                             );
                             cur_output_prop = enforcer.output_prop.clone();
@@ -479,7 +494,7 @@ impl OptimizeInputsTask {
     }
 }
 
-impl Task for OptimizeInputsTask {
+impl Task for OptimizeInputs {
     fn execute(self, ctx: &mut CascadesOptimizer) -> OptResult<TaskControl> {
         match self.state {
             Init => self.do_init(ctx),
@@ -492,14 +507,14 @@ impl Task for OptimizeInputsTask {
 }
 
 /// Optimizes a group for [`PhysicalPropertySet`].
-pub(super) struct OptimizeGroupTask {
+pub(super) struct OptimizeGroup {
     group_id: GroupId,
     /// Required property
     required_prop: PhysicalPropertySet,
     upper_bound: Cost,
 }
 
-impl OptimizeGroupTask {
+impl OptimizeGroup {
     pub(super) fn new(
         group_id: GroupId,
         required_prop: PhysicalPropertySet,
@@ -513,7 +528,7 @@ impl OptimizeGroupTask {
     }
 }
 
-impl Task for OptimizeGroupTask {
+impl Task for OptimizeGroup {
     fn execute(self, ctx: &mut CascadesOptimizer) -> OptResult<TaskControl> {
         info!(
             "Beginning to optimize group {:?} for physical property: {:?}",
@@ -537,7 +552,7 @@ impl Task for OptimizeGroupTask {
 
         for group_expr_id in group.logical_group_expr_ids() {
             tasks.push(
-                OptimizeExpressionTask {
+                OptimizeExpression {
                     group_expr_id,
                     required_prop: self.required_prop.clone(),
                     upper_bound: self.upper_bound,
@@ -550,7 +565,7 @@ impl Task for OptimizeGroupTask {
         // early pruning.
         for group_expr_id in group.physical_group_expr_ids() {
             tasks.push(
-                OptimizeInputsTask {
+                OptimizeInputs {
                     group_expr_id,
                     required_prop: self.required_prop.clone(),
                     upper_bound: self.upper_bound,
@@ -565,13 +580,13 @@ impl Task for OptimizeGroupTask {
 }
 
 /// Explores a group by applying exploring rules.
-pub(super) struct ExploreGroupTask {
+pub(super) struct ExploreGroup {
     group_id: GroupId,
     required_prop: PhysicalPropertySet,
     upper_bound: Cost,
 }
 
-impl Task for ExploreGroupTask {
+impl Task for ExploreGroup {
     fn execute(self, ctx: &mut CascadesOptimizer) -> OptResult<TaskControl> {
         if ctx.memo[self.group_id].explored {
             return Ok(TaskControl::done());
@@ -581,7 +596,7 @@ impl Task for ExploreGroupTask {
             .logical_group_expr_ids()
             .into_iter()
             .map(|group_expr_id| {
-                OptimizeExpressionTask {
+                OptimizeExpression {
                     group_expr_id,
                     required_prop: self.required_prop.clone(),
                     upper_bound: self.upper_bound,
@@ -599,7 +614,7 @@ impl Task for ExploreGroupTask {
 
 #[cfg(test)]
 mod tests {
-    use crate::cascades::task::{ApplyRuleTask, Task};
+    use crate::cascades::task::{ApplyRule, Task};
     use crate::cascades::{CascadesOptimizer, GroupId};
     use crate::cost::INF;
     use crate::operator::Join;
@@ -629,10 +644,10 @@ mod tests {
 
         let mut optimizer = CascadesOptimizer::new_for_test(plan);
 
-        let task = ApplyRuleTask {
+        let task = ApplyRule {
             rule: CommutateJoinRule::new().into(),
-            group_expr_id: optimizer.memo[optimizer.memo.root_group_id()].logical_group_expr_ids()
-                [0],
+            group_expr_id: optimizer.memo[optimizer.memo.root_group_id()]
+                .logical_group_expr_ids()[0],
             required_prop: PhysicalPropertySet::default(),
             upper_bound: INF,
         };

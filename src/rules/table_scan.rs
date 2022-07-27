@@ -18,7 +18,7 @@ lazy_static! {
 }
 
 /// Table scan implementation rule.
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Scan2TableScanRule {}
 
 impl Scan2TableScanRule {
@@ -34,7 +34,7 @@ impl Rule for Scan2TableScanRule {
         _ctx: &O,
         result: &mut RuleResult<O>,
     ) -> OptResult<()> {
-        if let Logical(LogicalScan(t)) = input.get_operator(&_ctx)? {
+        if let Logical(LogicalScan(t)) = input.get_operator(_ctx)? {
             let new_op = Physical(PTableScan(t.clone()));
             result.add(OptExpression::from(new_op));
             Ok(())
