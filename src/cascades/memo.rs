@@ -593,7 +593,8 @@ impl Group {
     pub(super) fn logical_group_expr_ids(&self) -> Vec<GroupExprId> {
         if cfg!(test) {
             self.logical_group_exprs
-                .keys().copied()
+                .keys()
+                .copied()
                 .sorted_by_key(|g| g.expr_id + g.group_id.0)
                 .collect()
         } else {

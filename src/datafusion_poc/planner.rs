@@ -116,8 +116,7 @@ mod tests {
 
     fn table_source(prefix: &str) -> Arc<DefaultTableSource> {
         let schema = table_schema(prefix);
-        let table_provider =
-            Arc::new(EmptyTable::new(Arc::new((&*schema).clone())));
+        let table_provider = Arc::new(EmptyTable::new(Arc::new((&*schema).clone())));
 
         Arc::new(DefaultTableSource::new(table_provider))
     }

@@ -75,7 +75,8 @@ impl<'a, 'b> Binding<'a, 'b> {
                 .iter()
                 .filter(|group_expr_id| {
                     self.memo[**group_expr_id].matches_without_children(self.pattern)
-                }).copied()
+                })
+                .copied()
                 .collect()
         };
 

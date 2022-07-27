@@ -104,8 +104,7 @@ mod tests {
             Arc::new(schema)
         };
 
-        let table_provider =
-            Arc::new(EmptyTable::new(Arc::new((&*schema).clone())));
+        let table_provider = Arc::new(EmptyTable::new(Arc::new((&*schema).clone())));
 
         // Construct datafusion logical plan
         let df_logical_plan = {
