@@ -7,8 +7,8 @@ on:
 
 jobs:
   # Check crate compiles
-  linux-build-lib:
-    name: Build Libraries on AMD64 Rust ${{ matrix.rust }}
+  linux-build-test:
+    name: Build and test on AMD64 Rust ${{ matrix.rust }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
