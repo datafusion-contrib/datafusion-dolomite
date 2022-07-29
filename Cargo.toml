@@ -1,5 +1,5 @@
 [workspace]
 members = [
-    "datafusion-integration",
+    "datafusion-dolomite-integration",
     "dolomite"
 ]
