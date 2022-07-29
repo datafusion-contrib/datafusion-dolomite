@@ -49,7 +49,6 @@ use datafusion::prelude::Expr;
 
 pub mod cascades;
 pub mod cost;
-pub mod datafusion_poc;
 pub mod error;
 pub mod heuristic;
 pub mod operator;

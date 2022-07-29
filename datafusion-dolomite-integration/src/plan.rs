@@ -1,17 +1,3 @@
-use crate::datafusion_poc::DFResult;
-use crate::error::OptResult;
-use crate::operator::LogicalOperator::{
-    LogicalJoin, LogicalLimit, LogicalProjection, LogicalScan,
-};
-use crate::operator::Operator::{Logical, Physical};
-use crate::operator::PhysicalOperator::{
-    PhysicalHashJoin, PhysicalProjection, PhysicalTableScan,
-};
-use crate::operator::{Join, Limit, LogicalOperator, Projection, TableScan};
-use crate::optimizer::OptimizerContext;
-use crate::plan::{PlanNode, PlanNodeIdGen};
-use crate::Expr;
-use crate::Expr::Column as ExprColumn;
 use anyhow::{anyhow, bail};
 use datafusion::common::{Column, DataFusionError, ScalarValue, ToDFSchema};
 use datafusion::datasource::empty::EmptyTable;
@@ -27,18 +13,28 @@ use datafusion::physical_plan::hash_join::{HashJoinExec, PartitionMode};
 use datafusion::physical_plan::join_utils::JoinOn;
 use datafusion::physical_plan::projection::ProjectionExec;
 use datafusion::physical_plan::ExecutionPlan;
+use datafusion::prelude::Expr;
+use datafusion::prelude::Expr::Column as ExprColumn;
 use datafusion_physical_expr::create_physical_expr;
+use dolomite::error::DFResult;
+use dolomite::error::OptResult;
+use dolomite::operator::LogicalOperator::{
+    LogicalJoin, LogicalLimit, LogicalProjection, LogicalScan,
+};
+use dolomite::operator::Operator::{Logical, Physical};
+use dolomite::operator::PhysicalOperator::{
+    PhysicalHashJoin, PhysicalProjection, PhysicalTableScan,
+};
+use dolomite::operator::{Join, Limit, LogicalOperator, Projection, TableScan};
+use dolomite::optimizer::OptimizerContext;
+use dolomite::plan::{PlanNode, PlanNodeIdGen};
 use futures::future::BoxFuture;
 use std::sync::Arc;
 
 /// Convert data fusion logical plan to our plan.
-impl<'a> TryFrom<&'a LogicalPlan> for PlanNode {
-    type Error = anyhow::Error;
-
-    fn try_from(value: &'a LogicalPlan) -> Result<Self, anyhow::Error> {
-        let mut plan_node_id_gen = PlanNodeIdGen::new();
-        df_logical_plan_to_plan_node(value, &mut plan_node_id_gen)
-    }
+pub fn try_convert(value: &LogicalPlan) -> Result<PlanNode, anyhow::Error> {
+    let mut plan_node_id_gen = PlanNodeIdGen::new();
+    df_logical_plan_to_plan_node(value, &mut plan_node_id_gen)
 }
 
 fn df_logical_plan_to_plan_node(
@@ -94,15 +90,6 @@ fn df_logical_plan_to_plan_node(
     ))
 }
 
-/// Converting logical plan to df logical plan.
-impl<'a> TryFrom<&'a PlanNode> for LogicalPlan {
-    type Error = anyhow::Error;
-
-    fn try_from(plan_node: &'a PlanNode) -> OptResult<Self> {
-        plan_node_to_df_logical_plan(plan_node)
-    }
-}
-
 fn expr_to_df_join_condition(expr: &Expr) -> OptResult<Vec<(Column, Column)>> {
     match expr {
         Expr::BinaryExpr { left, op, right } if matches!(op, DFOperator::Eq) => {
@@ -121,11 +108,11 @@ fn expr_to_df_join_condition(expr: &Expr) -> OptResult<Vec<(Column, Column)>> {
     }
 }
 
-fn plan_node_to_df_logical_plan(plan_node: &PlanNode) -> OptResult<LogicalPlan> {
+pub fn plan_node_to_df_logical_plan(plan_node: &PlanNode) -> OptResult<LogicalPlan> {
     let mut inputs = plan_node
         .inputs()
         .iter()
-        .map(|p| LogicalPlan::try_from(&**p))
+        .map(|p| plan_node_to_df_logical_plan(&**p))
         .collect::<OptResult<Vec<LogicalPlan>>>()?;
 
     match plan_node.operator() {
