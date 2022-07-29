@@ -1,11 +1,12 @@
-use crate::heuristic::{HepOptimizer, MatchOrder};
-use crate::optimizer::{Optimizer, OptimizerContext};
-use crate::plan::{Plan, PlanNode};
-use crate::rules::RuleImpl;
+use crate::plan::{plan_node_to_df_logical_plan, try_convert};
 use datafusion::common::DataFusionError;
 use datafusion::logical_expr::LogicalPlan;
 use datafusion::optimizer::optimizer::OptimizerRule;
 use datafusion::optimizer::OptimizerConfig;
+use dolomite::heuristic::{HepOptimizer, MatchOrder};
+use dolomite::optimizer::{Optimizer, OptimizerContext};
+use dolomite::plan::Plan;
+use dolomite::rules::RuleImpl;
 use std::sync::Arc;
 
 /// An adapter converts [`HeuristicOptimizer`] into datafusion's optimizer rule.
@@ -30,7 +31,7 @@ impl OptimizerRule for DFOptimizerAdapterRule {
     ) -> datafusion::common::Result<LogicalPlan> {
         println!("Beginning to execute heuristic optimizer");
         let plan = Plan::new(Arc::new(
-            PlanNode::try_from(df_plan)
+            try_convert(df_plan)
                 .map_err(|e| DataFusionError::Plan(format!("{:?}", e)))?,
         ));
 
@@ -47,7 +48,7 @@ impl OptimizerRule for DFOptimizerAdapterRule {
             .find_best_plan()
             .map_err(|e| DataFusionError::Plan(format!("{:?}", e)))?;
 
-        LogicalPlan::try_from(&*optimized_plan.root())
+        plan_node_to_df_logical_plan(&*optimized_plan.root())
             .map_err(|e| DataFusionError::Plan(format!("{:?}", e)))
     }
 
@@ -58,11 +59,7 @@ impl OptimizerRule for DFOptimizerAdapterRule {
 
 #[cfg(test)]
 mod tests {
-    use crate::datafusion_poc::rule::DFOptimizerAdapterRule;
-    use crate::optimizer::OptimizerContext;
-    use crate::rules::{
-        PushLimitOverProjectionRule, PushLimitToTableScanRule, RemoveLimitRule,
-    };
+    use crate::rule::DFOptimizerAdapterRule;
     use datafusion::arrow::datatypes::Schema;
     use datafusion::catalog::schema::MemorySchemaProvider;
     use datafusion::common::ToDFSchema;
@@ -72,6 +69,10 @@ mod tests {
     use datafusion::logical_plan::{LogicalPlan, LogicalPlanBuilder};
     use datafusion::optimizer::optimizer::OptimizerRule;
     use datafusion::optimizer::OptimizerConfig;
+    use dolomite::optimizer::OptimizerContext;
+    use dolomite::rules::{
+        PushLimitOverProjectionRule, PushLimitToTableScanRule, RemoveLimitRule,
+    };
     use serde_json::Value;
     use std::sync::Arc;
 

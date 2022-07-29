@@ -1,14 +1,14 @@
-use crate::cascades::CascadesOptimizer;
-use crate::datafusion_poc::plan::plan_node_to_df_physical_plan;
-use crate::optimizer::{Optimizer, OptimizerContext};
-use crate::plan::{Plan, PlanNode};
-use crate::properties::PhysicalPropertySet;
-use crate::rules::RuleImpl;
+use crate::plan::{plan_node_to_df_physical_plan, try_convert};
 use async_trait::async_trait;
 use datafusion::common::DataFusionError;
 use datafusion::execution::context::{QueryPlanner, SessionState};
 use datafusion::logical_expr::LogicalPlan;
 use datafusion::physical_plan::ExecutionPlan;
+use dolomite::cascades::CascadesOptimizer;
+use dolomite::optimizer::{Optimizer, OptimizerContext};
+use dolomite::plan::Plan;
+use dolomite::properties::PhysicalPropertySet;
+use dolomite::rules::RuleImpl;
 use std::sync::Arc;
 
 /// A query planner converting logical plan to physical plan.
@@ -32,7 +32,7 @@ impl QueryPlanner for DFQueryPlanner {
     ) -> datafusion::common::Result<Arc<dyn ExecutionPlan>> {
         println!("Beginning to execute heuristic optimizer");
         let logical_plan = Plan::new(Arc::new(
-            PlanNode::try_from(df_logical_plan)
+            try_convert(df_logical_plan)
                 .map_err(|e| DataFusionError::Plan(format!("{:?}", e)))?,
         ));
 
@@ -59,9 +59,7 @@ impl QueryPlanner for DFQueryPlanner {
 
 #[cfg(test)]
 mod tests {
-    use crate::datafusion_poc::planner::DFQueryPlanner;
-    use crate::optimizer::OptimizerContext;
-    use crate::rules::{CommutateJoinRule, Join2HashJoinRule, Scan2TableScanRule};
+    use crate::planner::DFQueryPlanner;
     use datafusion::arrow::datatypes::{Field, Schema};
     use datafusion::catalog::schema::MemorySchemaProvider;
     use datafusion::common::ToDFSchema;
@@ -73,6 +71,8 @@ mod tests {
     use datafusion::logical_plan::{JoinType, LogicalPlanBuilder};
     use datafusion::physical_plan::displayable;
     use datafusion::prelude::SessionConfig;
+    use dolomite::optimizer::OptimizerContext;
+    use dolomite::rules::{CommutateJoinRule, Join2HashJoinRule, Scan2TableScanRule};
     use serde_json::Value;
     use std::sync::Arc;
 
