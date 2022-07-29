@@ -6,11 +6,11 @@ pub type OperatorMatcher = fn(&Operator) -> bool;
 ///
 /// If we want to match `Join(Filter, Scan)` pattern, the pattern tree should be defined like:
 /// ```
-/// use datafusion_dolomite::operator::LogicalOperator::LogicalJoin;
-/// use datafusion_dolomite::operator::LogicalOperator::LogicalLimit;
-/// use datafusion_dolomite::operator::LogicalOperator::LogicalScan;
-/// use datafusion_dolomite::operator::Operator::Logical;
-/// use datafusion_dolomite::rules::{any, pattern, PatterBuilder};
+/// use dolomite::operator::LogicalOperator::LogicalJoin;
+/// use dolomite::operator::LogicalOperator::LogicalLimit;
+/// use dolomite::operator::LogicalOperator::LogicalScan;
+/// use dolomite::operator::Operator::Logical;
+/// use dolomite::rules::{any, pattern, PatterBuilder};
 ///
 /// pattern(|op| matches!(op, Logical(LogicalJoin(_))))
 ///   .pattern(|op| matches!(op, Logical(LogicalLimit(_))))
