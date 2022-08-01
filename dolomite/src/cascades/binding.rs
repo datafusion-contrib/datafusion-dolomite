@@ -127,6 +127,7 @@ mod tests {
     use crate::cascades::binding::Binding;
     use crate::cascades::memo::Memo;
     use crate::cascades::CascadesOptimizer;
+    use crate::cost::CostModel;
     use crate::operator::LogicalOperator::{
         LogicalJoin, LogicalLimit, LogicalProjection, LogicalScan,
     };
@@ -147,6 +148,7 @@ mod tests {
             rules: vec![],
             memo: Memo::from(plan),
             context: OptimizerContext::default(),
+            cost_model: CostModel::default(),
         }
     }
 
