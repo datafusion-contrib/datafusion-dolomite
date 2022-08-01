@@ -5,6 +5,7 @@ use datafusion::execution::context::{QueryPlanner, SessionState};
 use datafusion::logical_expr::LogicalPlan;
 use datafusion::physical_plan::ExecutionPlan;
 use dolomite::cascades::CascadesOptimizer;
+use dolomite::cost::CostModel;
 use dolomite::optimizer::{Optimizer, OptimizerContext};
 use dolomite::plan::Plan;
 use dolomite::properties::PhysicalPropertySet;
@@ -41,6 +42,7 @@ impl QueryPlanner for DFQueryPlanner {
             self.rules.clone(),
             logical_plan,
             self.optimizer_ctx.clone(),
+            CostModel::default(),
         );
 
         let physical_plan = optimizer

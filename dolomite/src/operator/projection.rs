@@ -2,7 +2,6 @@ use datafusion::common::DFField;
 use datafusion::logical_expr::ExprSchemable;
 use datafusion::logical_plan::{DFSchema, Expr};
 
-use crate::cost::Cost;
 use crate::error::{DFResult, OptResult};
 use crate::operator::{
     DerivePropContext, DerivePropResult, OperatorTrait, PhysicalOperatorTrait,
@@ -32,14 +31,6 @@ impl PhysicalOperatorTrait for Projection {
         &self,
         _context: DerivePropContext<O>,
     ) -> OptResult<Vec<DerivePropResult>> {
-        todo!()
-    }
-
-    fn cost<O: Optimizer>(
-        &self,
-        _expr_handle: O::ExprHandle,
-        _optimizer: &O,
-    ) -> OptResult<Cost> {
         todo!()
     }
 }

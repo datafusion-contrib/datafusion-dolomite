@@ -2,7 +2,6 @@ use std::fmt::Debug;
 
 use enum_dispatch::enum_dispatch;
 
-use crate::cost::Cost;
 use crate::error::OptResult;
 use crate::operator::{Join, Projection, TableScan};
 use crate::optimizer::Optimizer;
@@ -36,11 +35,4 @@ pub trait PhysicalOperatorTrait: Debug + PartialEq {
         &self,
         context: DerivePropContext<O>,
     ) -> OptResult<Vec<DerivePropResult>>;
-
-    /// Cost of current operator without accumulating children's cost.
-    fn cost<O: Optimizer>(
-        &self,
-        expr_handle: O::ExprHandle,
-        optimizer: &O,
-    ) -> OptResult<Cost>;
 }

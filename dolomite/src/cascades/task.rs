@@ -442,7 +442,9 @@ impl OptimizeInputs {
                             );
 
                             accumulated_cost +=
-                                enforcer.operator.cost(group_expr_id, ctx)?;
+                                ctx.cost_model.estimate_cost::<CascadesOptimizer>(
+                                    &ctx.memo[group_expr_id],
+                                )?;
                             ctx.memo[self.group_expr_id.group_id].update_winner(
                                 self.group_expr_id,
                                 &enforcer.output_prop,
@@ -482,11 +484,8 @@ impl OptimizeInputs {
     }
 
     fn operator_cost(&self, ctx: &CascadesOptimizer) -> OptResult<Cost> {
-        ctx.memo[self.group_expr_id]
-            .operator()
-            .as_physical()
-            .unwrap()
-            .cost(self.group_expr_id, ctx)
+        ctx.cost_model
+            .estimate_cost::<CascadesOptimizer>(&ctx.memo[self.group_expr_id])
     }
 
     fn inputs_len(&self, ctx: &CascadesOptimizer) -> usize {

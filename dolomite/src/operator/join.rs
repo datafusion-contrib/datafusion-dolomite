@@ -1,6 +1,5 @@
 use datafusion::prelude::JoinType;
 
-use crate::cost::Cost;
 use crate::error::OptResult;
 use crate::operator::{
     DerivePropContext, DerivePropResult, OperatorTrait, PhysicalOperatorTrait,
@@ -44,13 +43,12 @@ impl PhysicalOperatorTrait for Join {
         }])
     }
 
-    fn cost<O: Optimizer>(
-        &self,
-        _expr_handle: O::ExprHandle,
-        _optimizer: &O,
-    ) -> OptResult<Cost> {
-        Ok(Cost::from(1.0))
-    }
+    // fn cost<O: Optimizer>(
+    //     &self,
+    //     _expr_handle: O::ExprHandle,
+    //     _optimizer: &O,
+    // ) -> OptResult<Cost> {
+    // }
 }
 
 impl OperatorTrait for Join {

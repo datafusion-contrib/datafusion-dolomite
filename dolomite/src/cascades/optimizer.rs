@@ -2,7 +2,7 @@ use crate::cascades::memo::Memo;
 use crate::cascades::task::{schedule, OptimizeGroup};
 use crate::cascades::{Group, GroupExpr, GroupExprId, GroupId};
 
-use crate::cost::INF;
+use crate::cost::{CostModel, INF};
 use crate::error::OptResult;
 
 use crate::optimizer::{Optimizer, OptimizerContext};
@@ -15,6 +15,7 @@ pub struct CascadesOptimizer {
     pub(super) rules: Vec<RuleImpl>,
     pub(super) memo: Memo,
     pub(super) context: OptimizerContext,
+    pub(super) cost_model: CostModel,
 }
 
 impl Optimizer for CascadesOptimizer {
@@ -57,12 +58,14 @@ impl CascadesOptimizer {
         rules: Vec<RuleImpl>,
         plan: Plan,
         context: OptimizerContext,
+        cost_model: CostModel,
     ) -> Self {
         Self {
             required_prop,
             rules,
             memo: Memo::from(plan),
             context,
+            cost_model,
         }
     }
 
@@ -73,6 +76,7 @@ impl CascadesOptimizer {
             rules: vec![],
             memo: Memo::from(plan),
             context: OptimizerContext::default(),
+            cost_model: CostModel::default(),
         }
     }
 }
@@ -81,6 +85,7 @@ impl CascadesOptimizer {
 mod tests {
     use crate::cascades::CascadesOptimizer;
 
+    use crate::cost::CostModel;
     use crate::optimizer::{Optimizer, OptimizerContext};
     use crate::plan::{LogicalPlanBuilder, PhysicalPlanBuilder};
     use crate::properties::PhysicalPropertySet;
@@ -113,6 +118,7 @@ mod tests {
             ],
             plan,
             OptimizerContext::default(),
+            CostModel::default(),
         );
 
         let expected_plan = {
