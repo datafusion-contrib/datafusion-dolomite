@@ -3,6 +3,7 @@ use std::fmt::{Debug, Display, Formatter};
 use enum_dispatch::enum_dispatch;
 
 use crate::error::DolomiteResult;
+use crate::error::DolomiteResult;
 use crate::operator::DisplayFields;
 use crate::operator::{Join, Projection, TableScan};
 use crate::optimizer::Optimizer;

@@ -32,7 +32,7 @@ use futures::future::BoxFuture;
 use std::sync::Arc;
 
 /// Convert data fusion logical plan to our plan.
-pub fn try_convert(value: &LogicalPlan) -> Result<PlanNode, anyhow::Error> {
+pub fn try_convert(value: &LogicalPlan) -> DolomiteResult<PlanNode> {
     let mut plan_node_id_gen = PlanNodeIdGen::new();
     df_logical_plan_to_plan_node(value, &mut plan_node_id_gen)
 }

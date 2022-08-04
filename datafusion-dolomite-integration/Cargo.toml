@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 datafusion = { git = "https://github.com/apache/arrow-datafusion", rev = "884101e" }
+datafusion-sql = { git = "https://github.com/apache/arrow-datafusion", rev = "884101e" }
 datafusion-physical-expr = { git = "https://github.com/apache/arrow-datafusion", rev = "884101e" }
 dolomite = { path = "../dolomite"}
 thiserror = "1"
