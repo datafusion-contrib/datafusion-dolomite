@@ -2,7 +2,7 @@ use datafusion::common::DFField;
 use datafusion::logical_expr::ExprSchemable;
 use datafusion::logical_plan::{DFSchema, Expr};
 
-use crate::error::{DFResult, OptResult};
+use crate::error::{DFResult, DolomiteResult};
 use crate::operator::{
     DerivePropContext, DerivePropResult, OperatorTrait, PhysicalOperatorTrait,
 };
@@ -30,7 +30,7 @@ impl PhysicalOperatorTrait for Projection {
     fn derive_properties<O: Optimizer>(
         &self,
         _context: DerivePropContext<O>,
-    ) -> OptResult<Vec<DerivePropResult>> {
+    ) -> DolomiteResult<Vec<DerivePropResult>> {
         todo!()
     }
 }
@@ -40,7 +40,7 @@ impl OperatorTrait for Projection {
         &self,
         handle: O::ExprHandle,
         optimizer: &O,
-    ) -> OptResult<LogicalProperty> {
+    ) -> DolomiteResult<LogicalProperty> {
         let input_logical_prop = optimizer
             .group_at(optimizer.expr_at(handle).input_at(0, optimizer))
             .logical_prop();

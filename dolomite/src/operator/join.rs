@@ -1,6 +1,6 @@
 use datafusion::prelude::JoinType;
 
-use crate::error::OptResult;
+use crate::error::DolomiteResult;
 use crate::operator::{
     DerivePropContext, DerivePropResult, OperatorTrait, PhysicalOperatorTrait,
 };
@@ -33,7 +33,7 @@ impl PhysicalOperatorTrait for Join {
     fn derive_properties<O: Optimizer>(
         &self,
         _context: DerivePropContext<O>,
-    ) -> OptResult<Vec<DerivePropResult>> {
+    ) -> DolomiteResult<Vec<DerivePropResult>> {
         Ok(vec![DerivePropResult {
             output_prop: PhysicalPropertySet::default(),
             input_required_props: vec![
@@ -56,7 +56,7 @@ impl OperatorTrait for Join {
         &self,
         handle: O::ExprHandle,
         optimizer: &O,
-    ) -> OptResult<LogicalProperty> {
+    ) -> DolomiteResult<LogicalProperty> {
         let left_prop = optimizer
             .group_at(optimizer.expr_at(handle.clone()).input_at(0, optimizer))
             .logical_prop();

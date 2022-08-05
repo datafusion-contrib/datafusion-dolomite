@@ -1,7 +1,7 @@
 use anyhow::bail;
 use std::cmp::min;
 
-use crate::error::OptResult;
+use crate::error::DolomiteResult;
 use crate::operator::LogicalOperator::{LogicalLimit, LogicalProjection, LogicalScan};
 use crate::operator::Operator::Logical;
 use crate::operator::{Limit, TableScan};
@@ -46,7 +46,7 @@ impl Rule for PushLimitOverProjectionRule {
         opt_expr: OptExpression<O>,
         _ctx: &O,
         result: &mut RuleResult<O>,
-    ) -> OptResult<()> {
+    ) -> DolomiteResult<()> {
         let limit = opt_expr.get_operator(_ctx)?;
         let projection = opt_expr[0].get_operator(_ctx)?;
 
@@ -86,7 +86,7 @@ impl Rule for RemoveLimitRule {
         input: OptExpression<O>,
         _ctx: &O,
         result: &mut RuleResult<O>,
-    ) -> OptResult<()> {
+    ) -> DolomiteResult<()> {
         if let (Logical(LogicalLimit(limit1)), Logical(LogicalLimit(limit2))) =
             (input.get_operator(_ctx)?, input[0].get_operator(_ctx)?)
         {
@@ -130,7 +130,7 @@ impl Rule for PushLimitToTableScanRule {
         input: OptExpression<O>,
         ctx: &O,
         result: &mut RuleResult<O>,
-    ) -> OptResult<()> {
+    ) -> DolomiteResult<()> {
         if let (Logical(LogicalLimit(limit)), Logical(LogicalScan(scan))) =
             (input.get_operator(ctx)?, input[0].get_operator(ctx)?)
         {

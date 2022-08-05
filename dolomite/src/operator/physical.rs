@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use enum_dispatch::enum_dispatch;
 
-use crate::error::OptResult;
+use crate::error::DolomiteResult;
 use crate::operator::{Join, Projection, TableScan};
 use crate::optimizer::Optimizer;
 use crate::properties::PhysicalPropertySet;
@@ -34,5 +34,5 @@ pub trait PhysicalOperatorTrait: Debug + PartialEq {
     fn derive_properties<O: Optimizer>(
         &self,
         context: DerivePropContext<O>,
-    ) -> OptResult<Vec<DerivePropResult>>;
+    ) -> DolomiteResult<Vec<DerivePropResult>>;
 }

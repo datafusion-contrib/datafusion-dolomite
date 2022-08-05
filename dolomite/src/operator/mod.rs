@@ -18,7 +18,7 @@ use enum_as_inner::EnumAsInner;
 pub use join::*;
 pub use physical::*;
 
-use crate::error::OptResult;
+use crate::error::DolomiteResult;
 use crate::operator::Operator::{Logical, Physical};
 use crate::optimizer::Optimizer;
 use crate::properties::LogicalProperty;
@@ -36,7 +36,7 @@ pub trait OperatorTrait {
         &self,
         _handle: O::ExprHandle,
         optimizer: &O,
-    ) -> OptResult<LogicalProperty>;
+    ) -> DolomiteResult<LogicalProperty>;
 }
 
 impl OperatorTrait for Operator {
@@ -44,7 +44,7 @@ impl OperatorTrait for Operator {
         &self,
         _handle: O::ExprHandle,
         _optimizer: &O,
-    ) -> OptResult<LogicalProperty> {
+    ) -> DolomiteResult<LogicalProperty> {
         match self {
             Logical(op) => op.derive_logical_prop(_handle, _optimizer),
             Physical(op) => op.derive_logical_prop(_handle, _optimizer),

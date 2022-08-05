@@ -1,6 +1,6 @@
 //! Defines cost model.
 
-use crate::error::OptResult;
+use crate::error::DolomiteResult;
 use crate::optimizer::Optimizer;
 
 mod trivial;
@@ -29,7 +29,7 @@ pub struct CostModel {
 
 impl CostModel {
     /// Estimate cost of current operator without accumulating children's cost.
-    pub fn estimate_cost<O: Optimizer>(&self, expr: &O::Expr) -> OptResult<Cost> {
+    pub fn estimate_cost<O: Optimizer>(&self, expr: &O::Expr) -> DolomiteResult<Cost> {
         self.inner.cost::<O>(expr)
     }
 }

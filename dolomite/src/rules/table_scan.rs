@@ -1,6 +1,6 @@
 use anyhow::bail;
 
-use crate::error::OptResult;
+use crate::error::DolomiteResult;
 use crate::operator::LogicalOperator::LogicalScan;
 use crate::operator::Operator::{Logical, Physical};
 use crate::operator::PhysicalOperator::PhysicalTableScan as PTableScan;
@@ -33,7 +33,7 @@ impl Rule for Scan2TableScanRule {
         input: OptExpression<O>,
         _ctx: &O,
         result: &mut RuleResult<O>,
-    ) -> OptResult<()> {
+    ) -> DolomiteResult<()> {
         if let Logical(LogicalScan(t)) = input.get_operator(_ctx)? {
             let new_op = Physical(PTableScan(t.clone()));
             result.add(OptExpression::from(new_op));

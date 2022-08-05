@@ -2,7 +2,7 @@ use datafusion::catalog::schema::{MemorySchemaProvider, SchemaProvider};
 use std::fmt::Debug;
 use std::sync::Arc;
 
-use crate::error::OptResult;
+use crate::error::DolomiteResult;
 use crate::operator::Operator;
 use crate::plan::Plan;
 use crate::properties::LogicalProperty;
@@ -42,7 +42,7 @@ pub trait Optimizer {
     fn expr_at(&self, expr_handle: Self::ExprHandle) -> &Self::Expr;
 
     /// Entry point to drive optimization process.
-    fn find_best_plan(self) -> OptResult<Plan>;
+    fn find_best_plan(self) -> DolomiteResult<Plan>;
 }
 
 pub trait OptExpr {
