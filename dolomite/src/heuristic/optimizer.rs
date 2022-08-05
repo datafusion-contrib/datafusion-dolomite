@@ -2,7 +2,7 @@ use anyhow::ensure;
 use petgraph::Direction;
 use std::collections::HashMap;
 
-use crate::error::OptResult;
+use crate::error::DolomiteResult;
 use crate::heuristic::binding::Binding;
 use crate::heuristic::graph::{HepOptimizerNode, PlanGraph};
 use crate::heuristic::HepNodeId;
@@ -47,7 +47,7 @@ impl Optimizer for HepOptimizer {
         &self.graph.graph[expr_handle]
     }
 
-    fn find_best_plan(mut self) -> OptResult<Plan> {
+    fn find_best_plan(mut self) -> DolomiteResult<Plan> {
         for _times in 0..self.max_iter_times {
             // The plan no longer changes after iteration
             let mut fixed_point = true;
@@ -99,7 +99,7 @@ impl HepOptimizer {
         rules: Vec<RuleImpl>,
         plan: Plan,
         context: OptimizerContext,
-    ) -> OptResult<Self> {
+    ) -> DolomiteResult<Self> {
         let mut optimizer = Self {
             match_order,
             max_iter_times,
@@ -111,7 +111,11 @@ impl HepOptimizer {
         Ok(optimizer)
     }
 
-    fn apply_rule(&mut self, rule: RuleImpl, expr_handle: HepNodeId) -> OptResult<bool> {
+    fn apply_rule(
+        &mut self,
+        rule: RuleImpl,
+        expr_handle: HepNodeId,
+    ) -> DolomiteResult<bool> {
         let original_hep_node_id = expr_handle;
         if let Some(opt_node) = Binding::new(expr_handle, &*rule.pattern(), self).next() {
             let mut results = RuleResult::new();
@@ -141,7 +145,7 @@ impl HepOptimizer {
         &mut self,
         opt_node: OptExpression<HepOptimizer>,
         origin_node_id: HepNodeId,
-    ) -> OptResult<bool> {
+    ) -> DolomiteResult<bool> {
         let new_hep_node_id = self.insert_opt_node(&opt_node)?;
         if new_hep_node_id != origin_node_id {
             // Redirect parents's child to new node
@@ -168,7 +172,7 @@ impl HepOptimizer {
     fn insert_opt_node(
         &mut self,
         opt_expr: &OptExpression<HepOptimizer>,
-    ) -> OptResult<HepNodeId> {
+    ) -> DolomiteResult<HepNodeId> {
         match opt_expr.node() {
             ExprHandleNode(expr_handle) => Ok(*expr_handle),
             GroupHandleNode(group_handle) => Ok(*group_handle),
@@ -177,7 +181,7 @@ impl HepOptimizer {
                     .inputs()
                     .iter()
                     .map(|input_expr| self.insert_opt_node(&*input_expr))
-                    .collect::<OptResult<Vec<HepNodeId>>>()?;
+                    .collect::<DolomiteResult<Vec<HepNodeId>>>()?;
 
                 let hep_node = HepOptimizerNode {
                     // Currently this id is fake.
@@ -205,7 +209,7 @@ impl HepOptimizer {
         }
     }
 
-    fn init_with_plan(&mut self, plan: Plan) -> OptResult<()> {
+    fn init_with_plan(&mut self, plan: Plan) -> DolomiteResult<()> {
         let mut parents = HashMap::<PlanNodeId, Vec<HepNodeId>>::new();
         let mut node_id_map = HashMap::<PlanNodeId, HepNodeId>::new();
 

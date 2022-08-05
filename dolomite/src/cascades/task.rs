@@ -10,7 +10,7 @@ use crate::cascades::task::OptimizeInputsState::{
 use crate::cascades::task::TaskControl::{Done, Yield};
 use crate::cascades::{CascadesOptimizer, GroupExprId, GroupId};
 use crate::cost::Cost;
-use crate::error::OptResult;
+use crate::error::DolomiteResult;
 use crate::operator::PhysicalOperatorTrait;
 use crate::operator::{DerivePropContext, DerivePropResult, Operator};
 use crate::optimizer::OptExpr;
@@ -52,10 +52,13 @@ impl TaskControl {
 
 #[enum_dispatch(TaskImpl)]
 trait Task {
-    fn execute(self, ctx: &mut CascadesOptimizer) -> OptResult<TaskControl>;
+    fn execute(self, ctx: &mut CascadesOptimizer) -> DolomiteResult<TaskControl>;
 }
 
-pub(super) fn schedule(context: &mut CascadesOptimizer, root: TaskImpl) -> OptResult<()> {
+pub(super) fn schedule(
+    context: &mut CascadesOptimizer,
+    root: TaskImpl,
+) -> DolomiteResult<()> {
     let mut tasks = vec![root];
 
     while let Some(cur_task) = tasks.pop() {
@@ -85,7 +88,7 @@ pub(super) struct ApplyRule {
 }
 
 impl Task for ApplyRule {
-    fn execute(self, ctx: &mut CascadesOptimizer) -> OptResult<TaskControl> {
+    fn execute(self, ctx: &mut CascadesOptimizer) -> DolomiteResult<TaskControl> {
         if ctx.memo[self.group_expr_id].is_rule_applied(self.rule.rule_id()) {
             return Ok(TaskControl::done());
         }
@@ -162,7 +165,7 @@ pub(super) struct OptimizeExpression {
 }
 
 impl Task for OptimizeExpression {
-    fn execute(self, ctx: &mut CascadesOptimizer) -> OptResult<TaskControl> {
+    fn execute(self, ctx: &mut CascadesOptimizer) -> DolomiteResult<TaskControl> {
         let group_expr = &ctx.memo[self.group_expr_id];
         let apply_rule_tasks = ctx
             .rules
@@ -242,7 +245,7 @@ enum OptimizeInputsState {
 }
 
 impl OptimizeInputs {
-    fn do_init(mut self, ctx: &mut CascadesOptimizer) -> OptResult<TaskControl> {
+    fn do_init(mut self, ctx: &mut CascadesOptimizer) -> DolomiteResult<TaskControl> {
         println!("Current state {:?} for OptimizeInputsTask", &self);
         let memo = &ctx.memo;
         // Derive children required properties
@@ -286,7 +289,7 @@ impl OptimizeInputs {
     fn do_before_optimize_input(
         mut self,
         ctx: &CascadesOptimizer,
-    ) -> OptResult<TaskControl> {
+    ) -> DolomiteResult<TaskControl> {
         println!("Current state {:?} for OptimizeInputsTask", &self);
         let mut new_state = Invalid;
         swap(&mut new_state, &mut self.state);
@@ -325,7 +328,7 @@ impl OptimizeInputs {
     fn do_after_optimize_input(
         mut self,
         ctx: &CascadesOptimizer,
-    ) -> OptResult<TaskControl> {
+    ) -> DolomiteResult<TaskControl> {
         println!("Current state {:?} for OptimizeInputsTask", &self);
         let mut new_state = Invalid;
         swap(&mut new_state, &mut self.state);
@@ -397,7 +400,10 @@ impl OptimizeInputs {
     }
 
     #[allow(clippy::never_loop)]
-    fn do_optimize_self(mut self, ctx: &mut CascadesOptimizer) -> OptResult<TaskControl> {
+    fn do_optimize_self(
+        mut self,
+        ctx: &mut CascadesOptimizer,
+    ) -> DolomiteResult<TaskControl> {
         println!("Current state {:?} for OptimizeInputsTask", &self);
         let mut new_state = Invalid;
         swap(&mut new_state, &mut self.state);
@@ -483,7 +489,7 @@ impl OptimizeInputs {
         }
     }
 
-    fn operator_cost(&self, ctx: &CascadesOptimizer) -> OptResult<Cost> {
+    fn operator_cost(&self, ctx: &CascadesOptimizer) -> DolomiteResult<Cost> {
         ctx.cost_model
             .estimate_cost::<CascadesOptimizer>(&ctx.memo[self.group_expr_id])
     }
@@ -494,7 +500,7 @@ impl OptimizeInputs {
 }
 
 impl Task for OptimizeInputs {
-    fn execute(self, ctx: &mut CascadesOptimizer) -> OptResult<TaskControl> {
+    fn execute(self, ctx: &mut CascadesOptimizer) -> DolomiteResult<TaskControl> {
         match self.state {
             Init => self.do_init(ctx),
             BeforeOptimizeInput { .. } => self.do_before_optimize_input(ctx),
@@ -528,7 +534,7 @@ impl OptimizeGroup {
 }
 
 impl Task for OptimizeGroup {
-    fn execute(self, ctx: &mut CascadesOptimizer) -> OptResult<TaskControl> {
+    fn execute(self, ctx: &mut CascadesOptimizer) -> DolomiteResult<TaskControl> {
         info!(
             "Beginning to optimize group {:?} for physical property: {:?}",
             self.group_id, self.required_prop
@@ -586,7 +592,7 @@ pub(super) struct ExploreGroup {
 }
 
 impl Task for ExploreGroup {
-    fn execute(self, ctx: &mut CascadesOptimizer) -> OptResult<TaskControl> {
+    fn execute(self, ctx: &mut CascadesOptimizer) -> DolomiteResult<TaskControl> {
         if ctx.memo[self.group_id].explored {
             return Ok(TaskControl::done());
         }

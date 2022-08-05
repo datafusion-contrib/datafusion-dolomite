@@ -16,7 +16,7 @@ use prettytable::{row, Table};
 
 use crate::cascades::CascadesOptimizer;
 use crate::cost::Cost;
-use crate::error::OptResult;
+use crate::error::DolomiteResult;
 use crate::operator::Operator;
 use crate::optimizer::{OptExpr, OptExprHandle, OptGroup, OptGroupHandle};
 use crate::plan::{Plan, PlanNode, PlanNodeId, PlanNodeRef};
@@ -66,7 +66,7 @@ impl Memo {
     pub(super) fn best_plan(
         &self,
         required_prop: &PhysicalPropertySet,
-    ) -> OptResult<Plan> {
+    ) -> DolomiteResult<Plan> {
         let id_gen = {
             let id = Rc::new(RefCell::new(0u32));
             move || {
@@ -671,7 +671,7 @@ impl Group {
         prop: &PhysicalPropertySet,
         memo: &Memo,
         plan_id_gen: G,
-    ) -> OptResult<PlanNodeRef>
+    ) -> DolomiteResult<PlanNodeRef>
     where
         G: Fn() -> PlanNodeId + Clone,
     {

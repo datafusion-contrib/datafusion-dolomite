@@ -67,7 +67,7 @@ use strum_macros::AsRefStr;
 
 pub use table_scan::*;
 
-use crate::error::OptResult;
+use crate::error::DolomiteResult;
 use crate::operator::Operator;
 use crate::optimizer::{OptExpr, Optimizer};
 use crate::rules::OptExprNode::{ExprHandleNode, GroupHandleNode, OperatorNode};
@@ -157,7 +157,7 @@ impl<O: Optimizer> OptExpression<O> {
         &self.node
     }
 
-    pub fn get_operator<'a>(&'a self, optimizer: &'a O) -> OptResult<&'a Operator> {
+    pub fn get_operator<'a>(&'a self, optimizer: &'a O) -> DolomiteResult<&'a Operator> {
         match &self.node {
             ExprHandleNode(opt_node) => {
                 Ok(optimizer.expr_at(opt_node.clone()).operator())
@@ -248,7 +248,7 @@ pub trait Rule {
         input: OptExpression<O>,
         ctx: &O,
         result: &mut RuleResult<O>,
-    ) -> OptResult<()>;
+    ) -> DolomiteResult<()>;
 
     /// Pattern for rule.
     fn pattern(&self) -> &Pattern;

@@ -17,7 +17,7 @@ use datafusion::prelude::Expr;
 use datafusion::prelude::Expr::Column as ExprColumn;
 use datafusion_physical_expr::create_physical_expr;
 use dolomite::error::DFResult;
-use dolomite::error::OptResult;
+use dolomite::error::DolomiteResult;
 use dolomite::operator::LogicalOperator::{
     LogicalJoin, LogicalLimit, LogicalProjection, LogicalScan,
 };
@@ -40,7 +40,7 @@ pub fn try_convert(value: &LogicalPlan) -> Result<PlanNode, anyhow::Error> {
 fn df_logical_plan_to_plan_node(
     df_plan: &LogicalPlan,
     id_gen: &mut PlanNodeIdGen,
-) -> OptResult<PlanNode> {
+) -> DolomiteResult<PlanNode> {
     let id = id_gen.gen_next();
     let (operator, inputs) = match df_plan {
         LogicalPlan::Projection(projection) => {
@@ -90,7 +90,7 @@ fn df_logical_plan_to_plan_node(
     ))
 }
 
-fn expr_to_df_join_condition(expr: &Expr) -> OptResult<Vec<(Column, Column)>> {
+fn expr_to_df_join_condition(expr: &Expr) -> DolomiteResult<Vec<(Column, Column)>> {
     match expr {
         Expr::BinaryExpr { left, op, right } if matches!(op, DFOperator::Eq) => {
             match (&**left, &**right) {
@@ -108,12 +108,12 @@ fn expr_to_df_join_condition(expr: &Expr) -> OptResult<Vec<(Column, Column)>> {
     }
 }
 
-pub fn plan_node_to_df_logical_plan(plan_node: &PlanNode) -> OptResult<LogicalPlan> {
+pub fn plan_node_to_df_logical_plan(plan_node: &PlanNode) -> DolomiteResult<LogicalPlan> {
     let mut inputs = plan_node
         .inputs()
         .iter()
         .map(|p| plan_node_to_df_logical_plan(&**p))
-        .collect::<OptResult<Vec<LogicalPlan>>>()?;
+        .collect::<DolomiteResult<Vec<LogicalPlan>>>()?;
 
     match plan_node.operator() {
         Logical(LogicalProjection(projection)) => {
@@ -173,7 +173,7 @@ pub fn plan_node_to_df_physical_plan<'a>(
     plan_node: &'a PlanNode,
     session_state: &'a SessionState,
     ctx: &'a OptimizerContext,
-) -> BoxFuture<'a, OptResult<Arc<dyn ExecutionPlan>>> {
+) -> BoxFuture<'a, DolomiteResult<Arc<dyn ExecutionPlan>>> {
     Box::pin(async move {
         let mut inputs = Vec::with_capacity(plan_node.inputs().len());
         for input in plan_node.inputs().iter() {

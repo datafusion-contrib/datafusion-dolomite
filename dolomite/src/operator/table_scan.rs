@@ -1,4 +1,4 @@
-use crate::error::OptResult;
+use crate::error::DolomiteResult;
 use crate::operator::{
     DerivePropContext, DerivePropResult, OperatorTrait, PhysicalOperatorTrait,
 };
@@ -41,7 +41,7 @@ impl PhysicalOperatorTrait for TableScan {
     fn derive_properties<O: Optimizer>(
         &self,
         _context: DerivePropContext<O>,
-    ) -> OptResult<Vec<DerivePropResult>> {
+    ) -> DolomiteResult<Vec<DerivePropResult>> {
         Ok(vec![DerivePropResult {
             output_prop: PhysicalPropertySet::default(),
             input_required_props: vec![],
@@ -62,7 +62,7 @@ impl OperatorTrait for TableScan {
         &self,
         _handle: O::ExprHandle,
         optimizer: &O,
-    ) -> OptResult<LogicalProperty> {
+    ) -> DolomiteResult<LogicalProperty> {
         let schema = optimizer
             .context()
             .catalog

@@ -3,7 +3,7 @@ use crate::cascades::task::{schedule, OptimizeGroup};
 use crate::cascades::{Group, GroupExpr, GroupExprId, GroupId};
 
 use crate::cost::{CostModel, INF};
-use crate::error::OptResult;
+use crate::error::DolomiteResult;
 
 use crate::optimizer::{Optimizer, OptimizerContext};
 use crate::plan::Plan;
@@ -36,7 +36,7 @@ impl Optimizer for CascadesOptimizer {
         &self.memo[expr_handle]
     }
 
-    fn find_best_plan(mut self) -> OptResult<Plan> {
+    fn find_best_plan(mut self) -> DolomiteResult<Plan> {
         let root_task = OptimizeGroup::new(
             self.memo.root_group_id(),
             self.required_prop.clone(),

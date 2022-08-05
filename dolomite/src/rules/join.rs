@@ -1,7 +1,7 @@
 use anyhow::bail;
 use datafusion::prelude::JoinType;
 
-use crate::error::OptResult;
+use crate::error::DolomiteResult;
 use crate::operator::LogicalOperator::LogicalJoin;
 use crate::operator::Operator;
 use crate::operator::Operator::{Logical, Physical};
@@ -48,7 +48,7 @@ impl Rule for CommutateJoinRule {
         input: OptExpression<O>,
         _ctx: &O,
         result: &mut RuleResult<O>,
-    ) -> OptResult<()> {
+    ) -> DolomiteResult<()> {
         let op = input.get_operator(_ctx)?.clone();
         let ret =
             OptExpression::with_operator(op, vec![input[1].clone(), input[0].clone()]);
@@ -89,7 +89,7 @@ impl Rule for Join2HashJoinRule {
         input: OptExpression<O>,
         _ctx: &O,
         result: &mut RuleResult<O>,
-    ) -> OptResult<()> {
+    ) -> DolomiteResult<()> {
         if let Logical(LogicalJoin(join)) = input.get_operator(_ctx)? {
             let hash_join_op = Physical(PhysicalHashJoin(join.clone()));
             let ret = input.clone_with_inputs(hash_join_op);
