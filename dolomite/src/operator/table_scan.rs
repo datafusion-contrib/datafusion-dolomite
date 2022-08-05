@@ -1,11 +1,13 @@
 use crate::error::DolomiteResult;
 use crate::operator::{
-    DerivePropContext, DerivePropResult, OperatorTrait, PhysicalOperatorTrait,
+    DerivePropContext, DerivePropResult, DisplayFields, OperatorTrait,
+    PhysicalOperatorTrait,
 };
 use crate::optimizer::Optimizer;
 use crate::properties::{LogicalProperty, PhysicalPropertySet};
 use anyhow::anyhow;
 use datafusion::common::ToDFSchema;
+use std::fmt::Formatter;
 
 #[derive(Clone, Debug, Hash, Eq, PartialEq)]
 pub struct TableScan {
@@ -47,14 +49,6 @@ impl PhysicalOperatorTrait for TableScan {
             input_required_props: vec![],
         }])
     }
-
-    // fn cost<O: Optimizer>(
-    //     &self,
-    //     _expr_handle: O::ExprHandle,
-    //     _optimizer: &O,
-    // ) -> OptResult<Cost> {
-    //     Ok(Cost::from(1.0))
-    // }
 }
 
 impl OperatorTrait for TableScan {
@@ -70,5 +64,16 @@ impl OperatorTrait for TableScan {
             .ok_or_else(|| anyhow!("Table {:?} not exists", &self.table_name))?
             .schema();
         Ok(LogicalProperty::new(schema.to_dfschema()?))
+    }
+}
+
+impl DisplayFields for TableScan {
+    fn display(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut s = f.debug_struct("");
+        s.field("table_name", &self.table_name);
+        if let Some(limit) = self.limit {
+            s.field("limit", &limit);
+        }
+        s.finish()
     }
 }

@@ -1,10 +1,12 @@
 use datafusion::common::DFField;
 use datafusion::logical_expr::ExprSchemable;
 use datafusion::logical_plan::{DFSchema, Expr};
+use std::fmt::Formatter;
 
 use crate::error::{DFResult, DolomiteResult};
 use crate::operator::{
-    DerivePropContext, DerivePropResult, OperatorTrait, PhysicalOperatorTrait,
+    DerivePropContext, DerivePropResult, DisplayFields, OperatorTrait,
+    PhysicalOperatorTrait,
 };
 use crate::optimizer::{OptExpr, OptGroup, Optimizer};
 use crate::properties::LogicalProperty;
@@ -54,5 +56,11 @@ impl OperatorTrait for Projection {
         )?;
 
         Ok(LogicalProperty::new(schema))
+    }
+}
+
+impl DisplayFields for Projection {
+    fn display(&self, f: &mut Formatter) -> std::fmt::Result {
+        f.debug_struct("").field("expr", &self.expr).finish()
     }
 }

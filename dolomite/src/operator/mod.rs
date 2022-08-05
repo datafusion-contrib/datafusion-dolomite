@@ -4,7 +4,9 @@
 //! and physical operators in two enums since they need to implement different traits. For
 //! example, physical operators should implement trait for deriving cost and statistics.
 mod logical;
+
 pub use logical::*;
+use std::fmt::{Display, Formatter};
 mod physical;
 pub use physical::*;
 mod limit;
@@ -48,6 +50,20 @@ impl OperatorTrait for Operator {
         match self {
             Logical(op) => op.derive_logical_prop(_handle, _optimizer),
             Physical(op) => op.derive_logical_prop(_handle, _optimizer),
+        }
+    }
+}
+
+#[enum_dispatch(LogicalOperator, PhysicalOperator)]
+pub trait DisplayFields {
+    fn display(&self, fmt: &mut Formatter) -> std::fmt::Result;
+}
+
+impl Display for Operator {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Logical(op) => write!(f, "{}", op),
+            Physical(op) => write!(f, "{}", op),
         }
     }
 }
