@@ -1,8 +1,10 @@
 use datafusion::prelude::JoinType;
+use std::fmt::Formatter;
 
 use crate::error::DolomiteResult;
 use crate::operator::{
-    DerivePropContext, DerivePropResult, OperatorTrait, PhysicalOperatorTrait,
+    DerivePropContext, DerivePropResult, DisplayFields, OperatorTrait,
+    PhysicalOperatorTrait,
 };
 use crate::optimizer::{OptExpr, OptGroup, Optimizer};
 use crate::properties::{LogicalProperty, PhysicalPropertySet};
@@ -42,13 +44,6 @@ impl PhysicalOperatorTrait for Join {
             ],
         }])
     }
-
-    // fn cost<O: Optimizer>(
-    //     &self,
-    //     _expr_handle: O::ExprHandle,
-    //     _optimizer: &O,
-    // ) -> OptResult<Cost> {
-    // }
 }
 
 impl OperatorTrait for Join {
@@ -67,5 +62,14 @@ impl OperatorTrait for Join {
         let schema = left_prop.schema().join(right_prop.schema())?;
 
         Ok(LogicalProperty::new(schema))
+    }
+}
+
+impl DisplayFields for Join {
+    fn display(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("")
+            .field("join_type", &self.join_type)
+            .field("expr", &self.expr)
+            .finish()
     }
 }

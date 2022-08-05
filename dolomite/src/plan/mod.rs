@@ -10,6 +10,7 @@ pub use logical::*;
 mod physical;
 use crate::operator::Operator;
 pub use physical::*;
+pub mod explain;
 
 pub type PlanNodeId = u32;
 
@@ -40,7 +41,7 @@ impl PlanNodeIdGen {
 ///
 /// This is used in both input and output of an optimizer. Given that we may have many different
 /// phases in query optimization, we use one data structure to represent a plan.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PlanNode {
     id: PlanNodeId,
     operator: Operator,
