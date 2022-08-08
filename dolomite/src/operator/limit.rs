@@ -1,6 +1,4 @@
 use crate::error::DolomiteResult;
-use crate::error::DolomiteResult;
-use crate::operator::OperatorTrait;
 use crate::operator::{DisplayFields, OperatorTrait};
 use crate::optimizer::{OptExpr, OptGroup, Optimizer};
 use crate::properties::LogicalProperty;
