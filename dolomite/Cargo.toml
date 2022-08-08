@@ -14,7 +14,7 @@ itertools = "0.10"
 enum-as-inner = "0.4"
 derive_more = "0.99"
 petgraph = "0.6"
-anyhow = "1"
+anyhow = {version = "1", features = ["backtrace"] }
 smallvec = "1"
 prettytable-rs = "^0.8"
 lazy_static = "1"

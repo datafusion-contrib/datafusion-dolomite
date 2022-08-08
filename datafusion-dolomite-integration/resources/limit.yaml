@@ -1,0 +1,4 @@
+- sql: |
+    select * from t1
+  expected_optimized_plan: |
+    adaf
