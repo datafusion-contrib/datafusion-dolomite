@@ -96,9 +96,22 @@ impl<O: Optimizer> PartialEq for OptExprNode<O> {
         match (self, other) {
             (OperatorNode(this_op), OperatorNode(other_op)) => this_op == other_op,
             (ExprHandleNode(handle), ExprHandleNode(other_handle)) => {
-                ExprHandleNode(handle.clone())
+                handle == other_handle
             }
-            GroupHandleNode(handle) => GroupHandleNode(handle.clone()),
+            (GroupHandleNode(handle), GroupHandleNode(other_handle)) => {
+                handle == other_handle
+            }
+            _ => false,
+        }
+    }
+}
+
+impl<O: Optimizer> Debug for OptExprNode<O> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            OperatorNode(op) => write!(f, "OperatorNode: {:?}", op),
+            ExprHandleNode(handle) => write!(f, "ExprHandleNode: {:?}", handle),
+            GroupHandleNode(handle) => write!(f, "GroupHandleNode: {:?}", handle),
         }
     }
 }

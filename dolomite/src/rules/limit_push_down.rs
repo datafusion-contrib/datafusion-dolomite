@@ -167,28 +167,24 @@ impl Rule for PushLimitToTableScanRule {
 
 #[cfg(test)]
 mod tests {
-    use datafusion::arrow::datatypes::Schema;
-    use datafusion::catalog::schema::MemorySchemaProvider;
-    use datafusion::datasource::empty::EmptyTable;
     use datafusion::logical_expr::col;
     use maplit::hashmap;
-    use serde_json::Value;
-    use std::sync::Arc;
 
-    use crate::heuristic::{Binding, HepOptimizer, MatchOrder};
-    use crate::operator::LogicalOperator::LogicalLimit;
-    use crate::operator::{Limit, Operator};
-    use crate::optimizer::{Optimizer, OptimizerContext};
-    use crate::plan::{LogicalPlanBuilder, Plan};
+    use crate::heuristic::Binding;
+    use crate::operator::LogicalOperator::{
+        LogicalLimit, LogicalProjection, LogicalScan,
+    };
+    use crate::operator::{Limit, Operator, Projection, TableScan};
+    use crate::plan::LogicalPlanBuilder;
 
     use crate::rules::{
         PushLimitOverProjectionRule, PushLimitToTableScanRule, RemoveLimitRule, Rule,
-        RuleImpl, RuleResult,
+        RuleResult,
     };
     use crate::test_utils::build_hep_optimizer_for_test;
     use crate::test_utils::table_provider_from_schema;
 
-    const T1_SCHEMA_JSON: &'static str = r#"{
+    const T1_SCHEMA_JSON: &str = r#"{
                 "fields": [
                     {
                         "name": "c1",
@@ -209,84 +205,6 @@ mod tests {
                 ],
                 "metadata": {}
             }"#;
-
-    fn build_hep_optimizer(rules: Vec<RuleImpl>, plan: Plan) -> HepOptimizer {
-        let schema = {
-            let json = r#"{
-                "fields": [
-                    {
-                        "name": "c1",
-                        "nullable": false,
-                        "type": {
-                            "name": "utf8"
-                        },
-                        "children": []
-                    },
-                    {
-                        "name": "c2",
-                        "nullable": false,
-                        "type": {
-                            "name": "utf8"
-                        },
-                        "children": []
-                    }
-                ],
-                "metadata": {}
-            }"#;
-            let value: Value = serde_json::from_str(json).unwrap();
-            let schema = Schema::from(&value).unwrap();
-            Arc::new(schema)
-        };
-
-        let table_provider = Arc::new(EmptyTable::new(Arc::new((&*schema).clone())));
-
-        let optimizer_context = OptimizerContext {
-            catalog: Arc::new(MemorySchemaProvider::new()),
-        };
-
-        optimizer_context
-            .catalog
-            .register_table("t1".to_string(), table_provider)
-            .unwrap();
-
-        HepOptimizer::new(MatchOrder::TopDown, 1000, rules, plan, optimizer_context)
-            .unwrap()
-    }
-
-    #[test]
-    fn test_push_limit() {
-        let original_plan = LogicalPlanBuilder::new()
-            .scan(None, "t1".to_string())
-            .limit(5)
-            .projection(vec![col("c1")])
-            .limit(10)
-            .build();
-
-        println!("Original plan: {:?}", original_plan);
-
-        let optimizer = build_hep_optimizer(
-            vec![
-                PushLimitOverProjectionRule::new().into(),
-                RemoveLimitRule::new().into(),
-                PushLimitToTableScanRule::new().into(),
-            ],
-            original_plan,
-        );
-
-        let optimized_plan = optimizer.find_best_plan().unwrap();
-        let expected_plan = {
-            let raw_plan = LogicalPlanBuilder::new()
-                .scan(Some(5), "t1".to_string())
-                .projection(vec![col("c1")])
-                .build();
-
-            let optimizer = build_hep_optimizer(vec![], raw_plan);
-
-            optimizer.find_best_plan().unwrap()
-        };
-
-        assert_eq!(optimized_plan, expected_plan);
-    }
 
     #[test]
     fn test_push_limit_over_projection_pattern() {
@@ -319,7 +237,7 @@ mod tests {
         let opt_expr = Binding::new(optimizer.root_node_id(), rule.pattern(), &optimizer)
             .next()
             .unwrap();
-        let table_scan_group_id = opt_expr[0][0].clone();
+        let table_scan_group_id = opt_expr[0][0].clone().node;
 
         let mut result = RuleResult::new();
 
@@ -332,6 +250,83 @@ mod tests {
         );
 
         assert_eq!(1, result.exprs[0].inputs.len());
-        assert_eq!(table_scan_group_id, result.exprs[0][0]);
+        assert_eq!(table_scan_group_id, result.exprs[0][0].node);
+
+        assert_eq!(0, result.exprs[0][0].inputs.len());
+    }
+
+    #[test]
+    fn test_push_limit_to_table_scan() {
+        let original_plan = LogicalPlanBuilder::new()
+            .scan(None, "t1".to_string())
+            .limit(5)
+            .build();
+
+        let optimizer = build_hep_optimizer_for_test(
+            hashmap!("t1".to_string() => table_provider_from_schema(T1_SCHEMA_JSON)),
+            original_plan,
+        );
+
+        let rule = PushLimitToTableScanRule::new();
+
+        let opt_expr = Binding::new(optimizer.root_node_id(), rule.pattern(), &optimizer)
+            .next()
+            .unwrap();
+
+        let mut result = RuleResult::new();
+
+        rule.apply(opt_expr, &optimizer, &mut result).unwrap();
+
+        assert_eq!(1, result.exprs.len());
+        assert_eq!(
+            &Operator::Logical(LogicalScan(TableScan::with_limit("t1", 5))),
+            result.exprs[0].get_operator(&optimizer).unwrap()
+        );
+
+        assert_eq!(0, result.exprs[0].inputs.len());
+    }
+
+    #[test]
+    fn test_push_limit_over_projection() {
+        let original_plan = LogicalPlanBuilder::new()
+            .scan(None, "t1".to_string())
+            .projection(vec![col("c1")])
+            .limit(10)
+            .build();
+
+        let optimizer = build_hep_optimizer_for_test(
+            hashmap!("t1".to_string() => table_provider_from_schema(T1_SCHEMA_JSON)),
+            original_plan,
+        );
+
+        let rule = PushLimitOverProjectionRule::new();
+
+        let opt_expr = Binding::new(optimizer.root_node_id(), rule.pattern(), &optimizer)
+            .next()
+            .unwrap();
+
+        let table_scan_group_id = opt_expr[0][0].clone().node;
+
+        let mut result = RuleResult::new();
+
+        rule.apply(opt_expr, &optimizer, &mut result).unwrap();
+
+        assert_eq!(1, result.exprs.len());
+
+        assert_eq!(
+            &Operator::Logical(LogicalProjection(Projection::new(vec![col("c1")]))),
+            result.exprs[0].get_operator(&optimizer).unwrap()
+        );
+
+        assert_eq!(1, result.exprs[0].inputs.len());
+        assert_eq!(
+            &Operator::Logical(LogicalLimit(Limit::new(10))),
+            result.exprs[0][0].get_operator(&optimizer).unwrap()
+        );
+
+        assert_eq!(1, result.exprs[0][0].inputs.len());
+        assert_eq!(table_scan_group_id, result.exprs[0][0][0].node);
+
+        assert_eq!(0, result.exprs[0][0][0].inputs.len());
     }
 }
