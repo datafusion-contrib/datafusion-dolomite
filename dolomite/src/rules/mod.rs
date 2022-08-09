@@ -91,6 +91,18 @@ impl<O: Optimizer> Clone for OptExprNode<O> {
     }
 }
 
+impl<O: Optimizer> PartialEq for OptExprNode<O> {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (OperatorNode(this_op), OperatorNode(other_op)) => this_op == other_op,
+            (ExprHandleNode(handle), ExprHandleNode(other_handle)) => {
+                ExprHandleNode(handle.clone())
+            }
+            GroupHandleNode(handle) => GroupHandleNode(handle.clone()),
+        }
+    }
+}
+
 /// Optimizer expression tree matches rule pattern. Used as input/output of optimizer rule.
 ///
 /// When used as input, `node` must be an [`OptExprHandle`].
@@ -240,6 +252,7 @@ impl<O: Optimizer> RuleResult<O> {
     }
 }
 
+/// A rule should only focus on providing equivalent transformations of optimizer expressions.
 #[enum_dispatch(RuleImpl)]
 pub trait Rule {
     /// Apply a rule to match sub plan.

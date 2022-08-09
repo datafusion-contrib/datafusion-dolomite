@@ -111,6 +111,11 @@ impl HepOptimizer {
         Ok(optimizer)
     }
 
+    #[cfg(test)]
+    pub fn root_node_id(&self) -> HepNodeId {
+        self.graph.root
+    }
+
     fn apply_rule(
         &mut self,
         rule: RuleImpl,

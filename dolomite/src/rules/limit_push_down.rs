@@ -171,17 +171,44 @@ mod tests {
     use datafusion::catalog::schema::MemorySchemaProvider;
     use datafusion::datasource::empty::EmptyTable;
     use datafusion::logical_expr::col;
+    use maplit::hashmap;
     use serde_json::Value;
     use std::sync::Arc;
 
-    use crate::heuristic::{HepOptimizer, MatchOrder};
+    use crate::heuristic::{Binding, HepOptimizer, MatchOrder};
+    use crate::operator::LogicalOperator::LogicalLimit;
+    use crate::operator::{Limit, Operator};
     use crate::optimizer::{Optimizer, OptimizerContext};
     use crate::plan::{LogicalPlanBuilder, Plan};
 
     use crate::rules::{
         PushLimitOverProjectionRule, PushLimitToTableScanRule, RemoveLimitRule, Rule,
-        RuleImpl,
+        RuleImpl, RuleResult,
     };
+    use crate::test_utils::build_hep_optimizer_for_test;
+    use crate::test_utils::table_provider_from_schema;
+
+    const T1_SCHEMA_JSON: &'static str = r#"{
+                "fields": [
+                    {
+                        "name": "c1",
+                        "nullable": false,
+                        "type": {
+                            "name": "utf8"
+                        },
+                        "children": []
+                    },
+                    {
+                        "name": "c2",
+                        "nullable": false,
+                        "type": {
+                            "name": "utf8"
+                        },
+                        "children": []
+                    }
+                ],
+                "metadata": {}
+            }"#;
 
     fn build_hep_optimizer(rules: Vec<RuleImpl>, plan: Plan) -> HepOptimizer {
         let schema = {
@@ -272,5 +299,39 @@ mod tests {
 
         let rule = PushLimitOverProjectionRule::new();
         assert!((rule.pattern().predict)(original_plan.root().operator()));
+    }
+
+    #[test]
+    fn test_limit_merge() {
+        let original_plan = LogicalPlanBuilder::new()
+            .scan(None, "t1".to_string())
+            .limit(5)
+            .limit(10)
+            .build();
+
+        let optimizer = build_hep_optimizer_for_test(
+            hashmap!("t1".to_string() => table_provider_from_schema(T1_SCHEMA_JSON)),
+            original_plan,
+        );
+
+        let rule = RemoveLimitRule::new();
+
+        let opt_expr = Binding::new(optimizer.root_node_id(), rule.pattern(), &optimizer)
+            .next()
+            .unwrap();
+        let table_scan_group_id = opt_expr[0][0].clone();
+
+        let mut result = RuleResult::new();
+
+        rule.apply(opt_expr, &optimizer, &mut result).unwrap();
+
+        assert_eq!(1, result.exprs.len());
+        assert_eq!(
+            &Operator::Logical(LogicalLimit(Limit::new(5))),
+            result.exprs[0].get_operator(&optimizer).unwrap()
+        );
+
+        assert_eq!(1, result.exprs[0].inputs.len());
+        assert_eq!(table_scan_group_id, result.exprs[0][0]);
     }
 }

@@ -2,14 +2,14 @@ use crate::heuristic::{HepNodeId, HepOptimizer};
 use crate::optimizer::{OptExpr, Optimizer};
 use crate::rules::{OptExpression, Pattern};
 
-pub(super) struct Binding<'a, 'b> {
+pub(crate) struct Binding<'a, 'b> {
     expr_handle: HepNodeId,
     pattern: &'a Pattern,
     optimizer: &'b HepOptimizer,
 }
 
 impl<'a, 'b> Binding<'a, 'b> {
-    pub(super) fn new(
+    pub(crate) fn new(
         expr_handle: HepNodeId,
         pattern: &'a Pattern,
         optimizer: &'b HepOptimizer,
@@ -21,7 +21,7 @@ impl<'a, 'b> Binding<'a, 'b> {
         }
     }
 
-    pub(super) fn next(self) -> Option<OptExpression<HepOptimizer>> {
+    pub(crate) fn next(self) -> Option<OptExpression<HepOptimizer>> {
         let expr = self.optimizer.expr_at(self.expr_handle);
         if !(self.pattern.predict)(expr.operator()) {
             return None;
