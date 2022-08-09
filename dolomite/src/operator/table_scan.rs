@@ -6,7 +6,7 @@ use crate::operator::{
 use crate::optimizer::Optimizer;
 use crate::properties::{LogicalProperty, PhysicalPropertySet};
 use anyhow::anyhow;
-use datafusion::common::ToDFSchema;
+use datafusion::common::{DFField, DFSchema};
 use std::fmt::Formatter;
 
 #[derive(Clone, Debug, Hash, Eq, PartialEq)]
@@ -63,7 +63,16 @@ impl OperatorTrait for TableScan {
             .table(&self.table_name)
             .ok_or_else(|| anyhow!("Table {:?} not exists", &self.table_name))?
             .schema();
-        Ok(LogicalProperty::new(schema.to_dfschema()?))
+
+        let table_fields = schema
+            .fields()
+            .iter()
+            .map(|f| DFField::from_qualified(&self.table_name, f.clone()))
+            .collect();
+
+        let table_schema =
+            DFSchema::new_with_metadata(table_fields, schema.metadata().clone())?;
+        Ok(LogicalProperty::new(table_schema))
     }
 }
 

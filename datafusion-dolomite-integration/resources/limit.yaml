@@ -1,0 +1,11 @@
+- sql: |
+    select * from t1
+  expected_optimized_plan: |
+    LogicalProjection { expr: [#t1.f1, #t1.f2, #t1.last_name, #t1.state] }
+    └─ LogicalScan { table_name: "t1" }
+
+- sql: |
+    select * from t1 limit 5
+  expected_optimized_plan: |
+    LogicalProjection { expr: [#t1.f1, #t1.f2, #t1.last_name, #t1.state] }
+    └─ LogicalScan { table_name: "t1", limit: 5 }
