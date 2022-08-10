@@ -14,3 +14,5 @@ pub use optimizer::*;
 mod graph;
 pub use graph::*;
 mod binding;
+#[cfg(test)]
+pub(crate) use binding::*;

@@ -58,10 +58,10 @@ pub trait OptGroup {
     fn logical_prop(&self) -> &LogicalProperty;
 }
 
-pub trait OptExprHandle: Clone + Debug {
+pub trait OptExprHandle: Clone + Debug + PartialEq + Eq {
     type O: Optimizer<ExprHandle = Self>;
 }
 
-pub trait OptGroupHandle: Clone + Debug {
+pub trait OptGroupHandle: Clone + Debug + PartialEq + Eq {
     type O: Optimizer<GroupHandle = Self>;
 }
