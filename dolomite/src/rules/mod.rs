@@ -50,8 +50,8 @@
 //! graph in heuristic optimizer.
 mod pattern;
 pub use pattern::*;
-mod limit_push_down;
-pub use limit_push_down::*;
+mod limit;
+pub use limit::*;
 mod join;
 pub use join::*;
 mod opt_expr;
