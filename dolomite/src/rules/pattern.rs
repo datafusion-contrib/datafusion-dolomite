@@ -150,22 +150,3 @@ impl AddChild for RootPatternBuilder {
         self.inputs.push(pattern)
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use crate::operator::LogicalOperator::LogicalJoin;
-    use crate::operator::LogicalOperator::LogicalLimit;
-    use crate::operator::LogicalOperator::LogicalScan;
-    use crate::rules::Operator::Logical;
-    use crate::rules::{any, pattern, PatterBuilder};
-
-    #[test]
-    fn test() {
-        pattern(|op| matches!(op, Logical(LogicalJoin(_))))
-            .pattern(|op| matches!(op, Logical(LogicalLimit(_))))
-            .leaf(any)
-            .finish()
-            .leaf(|op| matches!(op, Logical(LogicalScan(_))))
-            .finish();
-    }
-}

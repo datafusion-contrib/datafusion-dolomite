@@ -24,9 +24,10 @@ use crate::error::DolomiteResult;
 use crate::operator::Operator::{Logical, Physical};
 use crate::optimizer::Optimizer;
 use crate::properties::LogicalProperty;
+use derive_more::From;
 use enum_dispatch::enum_dispatch;
 
-#[derive(Clone, Debug, Hash, PartialEq, EnumAsInner)]
+#[derive(Clone, Debug, Hash, PartialEq, EnumAsInner, From)]
 pub enum Operator {
     Logical(LogicalOperator),
     Physical(PhysicalOperator),

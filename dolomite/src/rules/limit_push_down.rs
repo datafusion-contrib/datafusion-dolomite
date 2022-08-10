@@ -178,11 +178,12 @@ mod tests {
     use crate::plan::LogicalPlanBuilder;
 
     use crate::rules::{
-        PushLimitOverProjectionRule, PushLimitToTableScanRule, RemoveLimitRule, Rule,
-        RuleResult,
+        OptExpression, PushLimitOverProjectionRule, PushLimitToTableScanRule,
+        RemoveLimitRule, Rule, RuleResult,
     };
     use crate::test_utils::build_hep_optimizer_for_test;
     use crate::test_utils::table_provider_from_schema;
+    use crate::utils::TreeBuilder;
 
     const T1_SCHEMA_JSON: &str = r#"{
                 "fields": [
@@ -237,22 +238,19 @@ mod tests {
         let opt_expr = Binding::new(optimizer.root_node_id(), rule.pattern(), &optimizer)
             .next()
             .unwrap();
-        let table_scan_group_id = opt_expr[0][0].clone().node;
+        let table_scan_group_id = opt_expr[0][0].node().clone();
 
         let mut result = RuleResult::new();
 
         rule.apply(opt_expr, &optimizer, &mut result).unwrap();
 
+        let expected_opt_expr =
+            OptExpression::new_builder::<Operator>(LogicalLimit(Limit::new(5)).into())
+                .leaf(table_scan_group_id)
+                .end_node();
+
         assert_eq!(1, result.exprs.len());
-        assert_eq!(
-            &Operator::Logical(LogicalLimit(Limit::new(5))),
-            result.exprs[0].get_operator(&optimizer).unwrap()
-        );
-
-        assert_eq!(1, result.exprs[0].inputs.len());
-        assert_eq!(table_scan_group_id, result.exprs[0][0].node);
-
-        assert_eq!(0, result.exprs[0][0].inputs.len());
+        assert_eq!(expected_opt_expr, result.exprs[0]);
     }
 
     #[test]
@@ -277,13 +275,13 @@ mod tests {
 
         rule.apply(opt_expr, &optimizer, &mut result).unwrap();
 
-        assert_eq!(1, result.exprs.len());
-        assert_eq!(
-            &Operator::Logical(LogicalScan(TableScan::with_limit("t1", 5))),
-            result.exprs[0].get_operator(&optimizer).unwrap()
-        );
+        let expected_opt_expr = OptExpression::new_builder::<Operator>(
+            LogicalScan(TableScan::with_limit("t1", 5)).into(),
+        )
+        .end_node();
 
-        assert_eq!(0, result.exprs[0].inputs.len());
+        assert_eq!(1, result.exprs.len());
+        assert_eq!(expected_opt_expr, result.exprs[0]);
     }
 
     #[test]
@@ -305,28 +303,21 @@ mod tests {
             .next()
             .unwrap();
 
-        let table_scan_group_id = opt_expr[0][0].clone().node;
+        let table_scan_group_id = opt_expr[0][0].node().clone();
 
         let mut result = RuleResult::new();
 
         rule.apply(opt_expr, &optimizer, &mut result).unwrap();
 
+        let expected_opt_expr = OptExpression::new_builder::<Operator>(
+            LogicalProjection(Projection::new(vec![col("c1")])).into(),
+        )
+        .begin_node::<Operator>(LogicalLimit(Limit::new(10)).into())
+        .leaf(table_scan_group_id)
+        .end_node()
+        .end_node();
+
         assert_eq!(1, result.exprs.len());
-
-        assert_eq!(
-            &Operator::Logical(LogicalProjection(Projection::new(vec![col("c1")]))),
-            result.exprs[0].get_operator(&optimizer).unwrap()
-        );
-
-        assert_eq!(1, result.exprs[0].inputs.len());
-        assert_eq!(
-            &Operator::Logical(LogicalLimit(Limit::new(10))),
-            result.exprs[0][0].get_operator(&optimizer).unwrap()
-        );
-
-        assert_eq!(1, result.exprs[0][0].inputs.len());
-        assert_eq!(table_scan_group_id, result.exprs[0][0][0].node);
-
-        assert_eq!(0, result.exprs[0][0][0].inputs.len());
+        assert_eq!(expected_opt_expr, result.exprs[0]);
     }
 }
