@@ -137,7 +137,8 @@ mod tests {
     use crate::plan::{LogicalPlanBuilder, Plan};
     use crate::properties::PhysicalPropertySet;
     use crate::rules::OptExprNode::GroupHandleNode;
-    use crate::rules::{any, pattern, OptExpression, PatterBuilder};
+    use crate::rules::{any, OptExpression, Pattern};
+    use crate::utils::TreeBuilder;
     use datafusion::logical_expr::binary_expr;
     use datafusion::logical_expr::Operator::Eq;
     use datafusion::prelude::{col, JoinType};
@@ -162,9 +163,10 @@ mod tests {
 
         let optimizer = create_optimizer(plan);
 
-        let table_scan_pattern = pattern(|op| matches!(op, Logical(LogicalLimit(_))))
-            .leaf(any)
-            .finish();
+        let table_scan_pattern =
+            Pattern::new_builder(|op| matches!(op, Logical(LogicalLimit(_))))
+                .leaf_node(any)
+                .end();
 
         let root_group_expr_id =
             optimizer.memo[optimizer.memo.root_group_id()].logical_group_expr_ids()[0];
@@ -250,9 +252,10 @@ mod tests {
                 .insert_opt_expression(&opt_expr, Some(join_group_id));
         }
 
-        let table_scan_pattern = pattern(|op| matches!(op, Logical(LogicalLimit(_))))
-            .leaf(|op| matches!(op, Logical(LogicalJoin(_))))
-            .finish();
+        let table_scan_pattern =
+            Pattern::new_builder(|op| matches!(op, Logical(LogicalLimit(_))))
+                .leaf_node(|op| matches!(op, Logical(LogicalJoin(_))))
+                .end();
 
         let mut bindings =
             Binding::new(root_group_expr_id, &table_scan_pattern, &optimizer.memo)

@@ -1,4 +1,5 @@
 use crate::operator::Operator;
+use crate::utils::RootBuilder;
 
 pub type OperatorMatcher = fn(&Operator) -> bool;
 
@@ -10,14 +11,15 @@ pub type OperatorMatcher = fn(&Operator) -> bool;
 /// use dolomite::operator::LogicalOperator::LogicalLimit;
 /// use dolomite::operator::LogicalOperator::LogicalScan;
 /// use dolomite::operator::Operator::Logical;
-/// use dolomite::rules::{any, pattern, PatterBuilder};
+/// use dolomite::rules::{any, Pattern};
+/// use dolomite::utils::TreeBuilder;
 ///
-/// pattern(|op| matches!(op, Logical(LogicalJoin(_))))
-///   .pattern(|op| matches!(op, Logical(LogicalLimit(_))))
-///     .leaf(any)
-///   .finish()
-///   .leaf(|op| matches!(op, Logical(LogicalScan(_))))
-/// .finish();
+/// Pattern::new_builder(|op| matches!(op, Logical(LogicalJoin(_))))
+///   .begin_node(|op| matches!(op, Logical(LogicalLimit(_))))
+///     .leaf_node(any)
+///   .end()
+///   .leaf_node(|op| matches!(op, Logical(LogicalScan(_))))
+/// .end();
 /// ```
 ///
 /// The root node in pattern tree matches `Join` operator, the first child node matches
@@ -27,6 +29,17 @@ pub struct Pattern {
     pub predict: OperatorMatcher,
     /// `None` for leaf node.
     pub children: Option<Vec<Pattern>>,
+}
+
+impl From<(OperatorMatcher, Vec<Pattern>)> for Pattern {
+    fn from(t: (OperatorMatcher, Vec<Pattern>)) -> Self {
+        let children = if t.1.is_empty() { None } else { Some(t.1) };
+
+        Self {
+            predict: t.0,
+            children,
+        }
+    }
 }
 
 impl Pattern {
@@ -55,98 +68,14 @@ impl Pattern {
             children: children_pattern,
         }
     }
+
+    pub fn new_builder(
+        predict: OperatorMatcher,
+    ) -> RootBuilder<Pattern, OperatorMatcher> {
+        RootBuilder::new(predict)
+    }
 }
 
 pub fn any(_: &Operator) -> bool {
     true
-}
-
-pub fn pattern(matcher: OperatorMatcher) -> RootPatternBuilder {
-    RootPatternBuilder {
-        matcher,
-        inputs: vec![],
-    }
-}
-
-pub trait PatterBuilder {
-    type Child;
-    type Output;
-    fn pattern(self, matcher: OperatorMatcher) -> Self::Child;
-    fn leaf(self, matcher: OperatorMatcher) -> Self;
-    fn finish(self) -> Self::Output;
-}
-
-pub struct RootPatternBuilder {
-    matcher: OperatorMatcher,
-    inputs: Vec<Pattern>,
-}
-
-trait AddChild {
-    fn add_child(&mut self, pattern: Pattern);
-}
-
-pub struct NonRootPatternBuilder<P> {
-    parent_builder: P,
-    matcher: OperatorMatcher,
-    inputs: Vec<Pattern>,
-}
-
-impl<P: PatterBuilder + AddChild> PatterBuilder for NonRootPatternBuilder<P> {
-    type Child = NonRootPatternBuilder<Self>;
-    type Output = P;
-
-    fn pattern(self, matcher: OperatorMatcher) -> NonRootPatternBuilder<Self> {
-        NonRootPatternBuilder {
-            parent_builder: self,
-            matcher,
-            inputs: vec![],
-        }
-    }
-
-    fn leaf(mut self, matcher: OperatorMatcher) -> Self {
-        let input = Pattern::new_leaf(matcher);
-        self.inputs.push(input);
-        self
-    }
-
-    fn finish(mut self) -> Self::Output {
-        let pattern = Pattern::new(self.matcher, self.inputs);
-        self.parent_builder.add_child(pattern);
-        self.parent_builder
-    }
-}
-
-impl<P> AddChild for NonRootPatternBuilder<P> {
-    fn add_child(&mut self, pattern: Pattern) {
-        self.inputs.push(pattern)
-    }
-}
-
-impl PatterBuilder for RootPatternBuilder {
-    type Child = NonRootPatternBuilder<Self>;
-    type Output = Pattern;
-
-    fn pattern(self, matcher: OperatorMatcher) -> Self::Child {
-        NonRootPatternBuilder {
-            parent_builder: self,
-            matcher,
-            inputs: vec![],
-        }
-    }
-
-    fn leaf(mut self, matcher: OperatorMatcher) -> Self {
-        let input = Pattern::new_leaf(matcher);
-        self.inputs.push(input);
-        self
-    }
-
-    fn finish(self) -> Self::Output {
-        Pattern::new(self.matcher, self.inputs)
-    }
-}
-
-impl AddChild for RootPatternBuilder {
-    fn add_child(&mut self, pattern: Pattern) {
-        self.inputs.push(pattern)
-    }
 }
