@@ -5,9 +5,9 @@ use datafusion::optimizer::optimizer::OptimizerRule;
 use datafusion::optimizer::OptimizerConfig;
 use dolomite::heuristic::{HepOptimizer, MatchOrder};
 use dolomite::optimizer::{Optimizer, OptimizerContext};
-use dolomite::plan::Plan;
+
 use dolomite::rules::RuleImpl;
-use std::sync::Arc;
+
 
 /// An adapter converts [`HeuristicOptimizer`] into datafusion's optimizer rule.
 ///

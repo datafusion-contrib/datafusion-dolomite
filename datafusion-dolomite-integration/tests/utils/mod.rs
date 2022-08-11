@@ -3,7 +3,7 @@ pub mod schema;
 
 use crate::utils::schema::MySchemaProvider;
 use anyhow::Context;
-use datafusion_dolomite_integration::plan::try_convert;
+use datafusion_dolomite_integration::conversion::from_df_logical;
 use datafusion_sql::planner::SqlToRel;
 use datafusion_sql::sqlparser::dialect::GenericDialect;
 use datafusion_sql::sqlparser::parser::Parser;
@@ -79,7 +79,6 @@ impl<F: OptimizerFactory> TestCaseRunner<F> {
         let mut ast = Parser::parse_sql(&self.dialect, sql).unwrap();
         let sql_to_rel = SqlToRel::new(&*self.catalog);
         let df_plan = sql_to_rel.sql_statement_to_plan(ast.remove(0)).unwrap();
-        let plan_node = try_convert(&df_plan).unwrap();
-        Plan::new(Arc::new(plan_node))
+        from_df_logical(&df_plan).unwrap()
     }
 }

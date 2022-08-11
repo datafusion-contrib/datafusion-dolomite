@@ -1,35 +1,28 @@
 use crate::conversion::expr_to_df_join_condition;
-use anyhow::{anyhow, bail};
-use datafusion::common::{Column, DataFusionError, ScalarValue, ToDFSchema};
+use anyhow::bail;
+use datafusion::common::ScalarValue;
 use datafusion::datasource::empty::EmptyTable;
-use datafusion::execution::context::SessionState;
+
 use datafusion::logical_expr::{and, LogicalPlan};
 use datafusion::logical_plan::plan::{
     DefaultTableSource, Join as DFJoin, Limit as DFLimit, Projection as DFProjection,
     TableScan as DFTableScan,
 };
 use datafusion::logical_plan::JoinConstraint;
-use datafusion::logical_plan::Operator as DFOperator;
-use datafusion::physical_plan::hash_join::{HashJoinExec, PartitionMode};
-use datafusion::physical_plan::join_utils::JoinOn;
-use datafusion::physical_plan::projection::ProjectionExec;
-use datafusion::physical_plan::ExecutionPlan;
+
 use datafusion::prelude::Expr;
 use datafusion::prelude::Expr::Column as ExprColumn;
-use datafusion_physical_expr::create_physical_expr;
-use dolomite::error::DFResult;
+
 use dolomite::error::DolomiteResult;
 use dolomite::operator::LogicalOperator::{
     LogicalJoin, LogicalLimit, LogicalProjection, LogicalScan,
 };
-use dolomite::operator::Operator::{Logical, Physical};
-use dolomite::operator::PhysicalOperator::{
-    PhysicalHashJoin, PhysicalProjection, PhysicalTableScan,
-};
+use dolomite::operator::Operator::Logical;
+
 use dolomite::operator::{Join, Limit, LogicalOperator, Projection, TableScan};
-use dolomite::optimizer::OptimizerContext;
+
 use dolomite::plan::{Plan, PlanNode, PlanNodeIdGen};
-use futures::future::BoxFuture;
+
 use std::sync::Arc;
 
 /// Convert dolomite logical plan to datafusion logical plan.

@@ -7,7 +7,7 @@ use datafusion::physical_plan::ExecutionPlan;
 use dolomite::cascades::CascadesOptimizer;
 use dolomite::cost::CostModel;
 use dolomite::optimizer::{Optimizer, OptimizerContext};
-use dolomite::plan::Plan;
+
 use dolomite::properties::PhysicalPropertySet;
 use dolomite::rules::RuleImpl;
 use std::sync::Arc;
