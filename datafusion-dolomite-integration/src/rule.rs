@@ -8,7 +8,6 @@ use dolomite::optimizer::{Optimizer, OptimizerContext};
 
 use dolomite::rules::RuleImpl;
 
-
 /// An adapter converts [`HeuristicOptimizer`] into datafusion's optimizer rule.
 ///
 /// It works as followings:

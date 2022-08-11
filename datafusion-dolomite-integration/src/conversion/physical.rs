@@ -4,8 +4,6 @@ use datafusion::common::{DataFusionError, ToDFSchema};
 
 use datafusion::execution::context::SessionState;
 
-
-
 use datafusion::physical_plan::hash_join::{HashJoinExec, PartitionMode};
 use datafusion::physical_plan::join_utils::JoinOn;
 use datafusion::physical_plan::projection::ProjectionExec;
@@ -15,7 +13,7 @@ use datafusion_physical_expr::create_physical_expr;
 use dolomite::error::DFResult;
 use dolomite::error::DolomiteResult;
 
-use dolomite::operator::Operator::{Physical};
+use dolomite::operator::Operator::Physical;
 use dolomite::operator::PhysicalOperator::{
     PhysicalHashJoin, PhysicalProjection, PhysicalTableScan,
 };
