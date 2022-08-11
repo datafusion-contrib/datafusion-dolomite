@@ -1,13 +1,12 @@
-use crate::plan::{plan_node_to_df_logical_plan, try_convert};
+use crate::conversion::{from_df_logical, to_df_logical};
 use datafusion::common::DataFusionError;
 use datafusion::logical_expr::LogicalPlan;
 use datafusion::optimizer::optimizer::OptimizerRule;
 use datafusion::optimizer::OptimizerConfig;
 use dolomite::heuristic::{HepOptimizer, MatchOrder};
 use dolomite::optimizer::{Optimizer, OptimizerContext};
-use dolomite::plan::Plan;
+
 use dolomite::rules::RuleImpl;
-use std::sync::Arc;
 
 /// An adapter converts [`HeuristicOptimizer`] into datafusion's optimizer rule.
 ///
@@ -30,10 +29,8 @@ impl OptimizerRule for DFOptimizerAdapterRule {
         _optimizer_config: &mut OptimizerConfig,
     ) -> datafusion::common::Result<LogicalPlan> {
         println!("Beginning to execute heuristic optimizer");
-        let plan = Plan::new(Arc::new(
-            try_convert(df_plan)
-                .map_err(|e| DataFusionError::Plan(format!("{:?}", e)))?,
-        ));
+        let plan = from_df_logical(df_plan)
+            .map_err(|e| DataFusionError::Plan(format!("{:?}", e)))?;
 
         // Construct heuristic optimizer here
         let hep_optimizer = HepOptimizer::new(
@@ -48,7 +45,7 @@ impl OptimizerRule for DFOptimizerAdapterRule {
             .find_best_plan()
             .map_err(|e| DataFusionError::Plan(format!("{:?}", e)))?;
 
-        plan_node_to_df_logical_plan(&*optimized_plan.root())
+        to_df_logical(&optimized_plan)
             .map_err(|e| DataFusionError::Plan(format!("{:?}", e)))
     }
 

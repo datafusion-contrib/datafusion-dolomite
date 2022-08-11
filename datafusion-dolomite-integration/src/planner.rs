@@ -1,4 +1,4 @@
-use crate::plan::{plan_node_to_df_physical_plan, try_convert};
+use crate::conversion::{from_df_logical, to_df_physical};
 use async_trait::async_trait;
 use datafusion::common::DataFusionError;
 use datafusion::execution::context::{QueryPlanner, SessionState};
@@ -7,7 +7,7 @@ use datafusion::physical_plan::ExecutionPlan;
 use dolomite::cascades::CascadesOptimizer;
 use dolomite::cost::CostModel;
 use dolomite::optimizer::{Optimizer, OptimizerContext};
-use dolomite::plan::Plan;
+
 use dolomite::properties::PhysicalPropertySet;
 use dolomite::rules::RuleImpl;
 use std::sync::Arc;
@@ -32,10 +32,8 @@ impl QueryPlanner for DFQueryPlanner {
         session_state: &SessionState,
     ) -> datafusion::common::Result<Arc<dyn ExecutionPlan>> {
         println!("Beginning to execute heuristic optimizer");
-        let logical_plan = Plan::new(Arc::new(
-            try_convert(df_logical_plan)
-                .map_err(|e| DataFusionError::Plan(format!("{:?}", e)))?,
-        ));
+        let logical_plan = from_df_logical(df_logical_plan)
+            .map_err(|e| DataFusionError::Plan(format!("{:?}", e)))?;
 
         let optimizer = CascadesOptimizer::new(
             PhysicalPropertySet::default(),
@@ -49,13 +47,11 @@ impl QueryPlanner for DFQueryPlanner {
             .find_best_plan()
             .map_err(|e| DataFusionError::Plan(format!("{:?}", e)))?;
 
-        plan_node_to_df_physical_plan(
-            &*physical_plan.root(),
-            session_state,
-            &self.optimizer_ctx,
-        )
-        .await
-        .map_err(|e| DataFusionError::Plan(format!("Physical planner error: {:?}", e)))
+        to_df_physical(&physical_plan, session_state, &self.optimizer_ctx)
+            .await
+            .map_err(|e| {
+                DataFusionError::Plan(format!("Physical planner error: {:?}", e))
+            })
     }
 }
 

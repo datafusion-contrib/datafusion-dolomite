@@ -1,5 +1,5 @@
 //! Contains code to integrate with datafusion.
-pub mod plan;
+pub mod conversion;
 pub mod planner;
 pub mod rule;
 
