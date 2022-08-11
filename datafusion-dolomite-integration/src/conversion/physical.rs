@@ -36,7 +36,10 @@ pub fn to_df_physical<'a>(
     session_state: &'a SessionState,
     ctx: &'a OptimizerContext,
 ) -> BoxFuture<'a, DolomiteResult<Arc<dyn ExecutionPlan>>> {
-    plan_node_to_df_physical_plan(&*plan.root(), session_state, ctx)
+    Box::pin(async {
+        let root = plan.root();
+        plan_node_to_df_physical_plan(&*root, session_state, ctx).await
+    })
 }
 
 fn plan_node_to_df_physical_plan<'a>(
