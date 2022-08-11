@@ -6,23 +6,34 @@ pub trait TreeBuilder: Sized {
     type Tree: From<(Self::Node, Vec<Self::Tree>)>;
     type Output;
 
-    fn begin_node<K: Into<Self::Node>>(
+    fn begin<K: Into<Self::Node>>(
         self,
         node: K,
     ) -> NonRootBuilder<Self::Tree, Self::Node, Self> {
+        self.begin_node(node.into())
+    }
+
+    fn begin_node(
+        self,
+        node: Self::Node,
+    ) -> NonRootBuilder<Self::Tree, Self::Node, Self> {
         NonRootBuilder {
             parent: self,
-            node: node.into(),
+            node,
             children: vec![],
         }
     }
 
     fn leaf<K: Into<Self::Node>>(self, node: K) -> Self {
-        let tree = Self::Tree::from((node.into(), vec![]));
+        self.leaf_node(node.into())
+    }
+
+    fn leaf_node(self, node: Self::Node) -> Self {
+        let tree = Self::Tree::from((node, vec![]));
         self.add_child(tree)
     }
 
-    fn end_node(self) -> Self::Output;
+    fn end(self) -> Self::Output;
 
     fn add_child(self, tree: Self::Tree) -> Self;
 }
@@ -55,7 +66,7 @@ where
     type Tree = T;
     type Output = T;
 
-    fn end_node(self) -> T {
+    fn end(self) -> T {
         T::from((self.node, self.children))
     }
 
@@ -74,7 +85,7 @@ where
     type Tree = T;
     type Output = P;
 
-    fn end_node(self) -> P {
+    fn end(self) -> P {
         let tree = T::from((self.node, self.children));
         self.parent.add_child(tree)
     }

@@ -8,26 +8,25 @@ use crate::operator::{Limit, TableScan};
 use crate::optimizer::Optimizer;
 use crate::rules::RuleId::{PushLimitOverProjection, PushLimitToTableScan, RemoveLimit};
 use crate::rules::RulePromise::LOW;
-use crate::rules::{
-    pattern, OptExpression, PatterBuilder, Pattern, Rule, RuleId, RulePromise, RuleResult,
-};
+use crate::rules::{OptExpression, Pattern, Rule, RuleId, RulePromise, RuleResult};
+use crate::utils::TreeBuilder;
 
 #[rustfmt::skip::macros(lazy_static)]
 lazy_static! {
     static ref REMOVE_LIMIT_RULE_PATTERN: Pattern = {
-        pattern(|op| matches!(op, Logical(LogicalLimit(_))))
-          .leaf(|op| matches!(op, Logical(LogicalLimit(_))))
-        .finish()
+        Pattern::new_builder(|op| matches!(op, Logical(LogicalLimit(_))))
+          .leaf_node(|op| matches!(op, Logical(LogicalLimit(_))))
+        .end()
     };
     static ref PUSH_LIMIT_OVER_PROJECTION_PATTERN: Pattern = {
-        pattern(|op| matches!(op, Logical(LogicalLimit(_))))
-          .leaf(|op| matches!(op, Logical(LogicalProjection(_))))
-        .finish()
+        Pattern::new_builder(|op| matches!(op, Logical(LogicalLimit(_))))
+          .leaf_node(|op| matches!(op, Logical(LogicalProjection(_))))
+        .end()
     };
     static ref PUSH_LIMIT_TO_TABLE_SCAN_PATTERN: Pattern = {
-        pattern(|op| matches!(op, Logical(LogicalLimit(_))))
-          .leaf(|op| matches!(op, Logical(LogicalScan(_))))
-        .finish()
+        Pattern::new_builder(|op| matches!(op, Logical(LogicalLimit(_))))
+          .leaf_node(|op| matches!(op, Logical(LogicalScan(_))))
+        .end()
     };
 }
 
@@ -247,7 +246,7 @@ mod tests {
         let expected_opt_expr =
             OptExpression::new_builder::<Operator>(LogicalLimit(Limit::new(5)).into())
                 .leaf(table_scan_group_id)
-                .end_node();
+                .end();
 
         assert_eq!(1, result.exprs.len());
         assert_eq!(expected_opt_expr, result.exprs[0]);
@@ -278,7 +277,7 @@ mod tests {
         let expected_opt_expr = OptExpression::new_builder::<Operator>(
             LogicalScan(TableScan::with_limit("t1", 5)).into(),
         )
-        .end_node();
+        .end();
 
         assert_eq!(1, result.exprs.len());
         assert_eq!(expected_opt_expr, result.exprs[0]);
@@ -312,10 +311,10 @@ mod tests {
         let expected_opt_expr = OptExpression::new_builder::<Operator>(
             LogicalProjection(Projection::new(vec![col("c1")])).into(),
         )
-        .begin_node::<Operator>(LogicalLimit(Limit::new(10)).into())
+        .begin::<Operator>(LogicalLimit(Limit::new(10)).into())
         .leaf(table_scan_group_id)
-        .end_node()
-        .end_node();
+        .end()
+        .end();
 
         assert_eq!(1, result.exprs.len());
         assert_eq!(expected_opt_expr, result.exprs[0]);

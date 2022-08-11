@@ -9,19 +9,18 @@ use crate::operator::PhysicalOperator::PhysicalHashJoin;
 use crate::optimizer::Optimizer;
 use crate::rules::RuleId::Join2HashJoin;
 use crate::rules::RulePromise::High;
-use crate::rules::{
-    pattern, OptExpression, PatterBuilder, Pattern, Rule, RuleId, RulePromise, RuleResult,
-};
+use crate::rules::{OptExpression, Pattern, Rule, RuleId, RulePromise, RuleResult};
+use crate::utils::TreeBuilder;
 
 #[rustfmt::skip::macros(lazy_static)]
 lazy_static! {
     static ref COMMUTATE_JOIN_RULE_PATTERN: Pattern = {
-        pattern(CommutateJoinRule::matches)
-        .finish()
+        Pattern::new_builder(CommutateJoinRule::matches)
+        .end()
     };
     static ref JOIN_TO_HASH_JOIN_RULE_PATTERN: Pattern = {
-        pattern(Join2HashJoinRule::matches)
-        .finish()
+        Pattern::new_builder(Join2HashJoinRule::matches)
+        .end()
     };
 }
 
