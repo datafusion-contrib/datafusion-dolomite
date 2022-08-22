@@ -1,8 +1,7 @@
 use crate::operator::Operator::Physical;
 use crate::operator::PhysicalOperator::{PhysicalHashJoin, PhysicalTableScan};
-use crate::operator::{Join, TableScan};
+use crate::operator::{Join, JoinType, TableScan};
 use crate::plan::{Plan, PlanNode, PlanNodeId, PlanNodeRef};
-use datafusion::logical_plan::JoinType;
 use datafusion::prelude::Expr;
 use std::sync::Arc;
 

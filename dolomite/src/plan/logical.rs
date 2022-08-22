@@ -1,8 +1,8 @@
 use crate::operator::LogicalOperator::{LogicalJoin, LogicalProjection, LogicalScan};
 use crate::operator::Operator::Logical;
-use crate::operator::{Join, Limit, LogicalOperator, Projection, TableScan};
+use crate::operator::{Join, JoinType, Limit, LogicalOperator, Projection, TableScan};
 use crate::plan::{Plan, PlanNode, PlanNodeId, PlanNodeRef};
-use datafusion::prelude::{Expr, JoinType};
+use datafusion::prelude::Expr;
 use std::sync::Arc;
 
 pub struct LogicalPlanBuilder {
