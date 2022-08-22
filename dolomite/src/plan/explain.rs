@@ -43,11 +43,11 @@ pub fn explain_to_string(plan: &Plan) -> std::io::Result<String> {
 
 #[cfg(test)]
 mod tests {
+    use crate::operator::JoinType;
     use crate::plan::explain::explain_to_string;
     use crate::plan::{LogicalPlanBuilder, PhysicalPlanBuilder};
     use datafusion::logical_expr::{binary_expr, col};
     use datafusion::logical_plan::Operator::Eq;
-    use datafusion::prelude::JoinType;
 
     #[test]
     fn test_explain_logical_plan() {

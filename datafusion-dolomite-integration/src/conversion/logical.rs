@@ -70,7 +70,7 @@ fn plan_node_to_df_logical_plan(plan_node: &PlanNode) -> DolomiteResult<LogicalP
                 right: Arc::new(inputs.remove(0)),
                 on: expr_to_df_join_condition(join.expr())?,
                 filter: None,
-                join_type: join.join_type(),
+                join_type: join.join_type().try_into()?,
                 join_constraint: JoinConstraint::On,
                 schema: Arc::new(plan_node.logical_prop().unwrap().schema().clone()),
                 null_equals_null: true,
@@ -126,8 +126,10 @@ fn df_logical_plan_to_plan_node(
                 })
                 .reduce(and)
                 .unwrap_or(Expr::Literal(ScalarValue::Boolean(Some(true))));
-            let operator =
-                LogicalOperator::LogicalJoin(Join::new(join.join_type, join_cond));
+            let operator = LogicalOperator::LogicalJoin(Join::new(
+                join.join_type.try_into()?,
+                join_cond,
+            ));
             let inputs = vec![
                 df_logical_plan_to_plan_node(&join.left, id_gen)?,
                 df_logical_plan_to_plan_node(&join.right, id_gen)?,

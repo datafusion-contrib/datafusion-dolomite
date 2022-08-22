@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use datafusion::logical_plan::DFSchema;
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct LogicalProperty {
     schema: Arc<DFSchema>,
 }

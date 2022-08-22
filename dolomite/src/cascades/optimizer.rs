@@ -86,12 +86,12 @@ mod tests {
     use crate::cascades::CascadesOptimizer;
 
     use crate::cost::CostModel;
+    use crate::operator::JoinType;
     use crate::optimizer::{Optimizer, OptimizerContext};
     use crate::plan::{LogicalPlanBuilder, PhysicalPlanBuilder};
     use crate::properties::PhysicalPropertySet;
     use crate::rules::{CommutateJoinRule, Join2HashJoinRule, Scan2TableScanRule};
     use datafusion::logical_expr::{binary_expr, col};
-    use datafusion::logical_plan::JoinType;
     use datafusion::logical_plan::Operator::Eq;
 
     #[test]

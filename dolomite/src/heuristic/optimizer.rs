@@ -122,7 +122,7 @@ impl HepOptimizer {
         expr_handle: HepNodeId,
     ) -> DolomiteResult<bool> {
         let original_hep_node_id = expr_handle;
-        if let Some(opt_node) = Binding::new(expr_handle, &*rule.pattern(), self).next() {
+        if let Some(opt_node) = Binding::new(expr_handle, rule.pattern(), self).next() {
             let mut results = RuleResult::new();
             rule.apply(opt_node, self, &mut results)?;
 
@@ -185,7 +185,7 @@ impl HepOptimizer {
                 let input_hep_node_ids: Vec<HepNodeId> = opt_expr
                     .inputs()
                     .iter()
-                    .map(|input_expr| self.insert_opt_node(&*input_expr))
+                    .map(|input_expr| self.insert_opt_node(input_expr))
                     .collect::<DolomiteResult<Vec<HepNodeId>>>()?;
 
                 let hep_node = HepOptimizerNode {

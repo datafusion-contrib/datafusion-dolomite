@@ -132,7 +132,7 @@ mod tests {
         LogicalJoin, LogicalLimit, LogicalProjection, LogicalScan,
     };
     use crate::operator::Operator::Logical;
-    use crate::operator::{Join, Limit, Projection, TableScan};
+    use crate::operator::{Join, JoinType, Limit, Projection, TableScan};
     use crate::optimizer::OptimizerContext;
     use crate::plan::{LogicalPlanBuilder, Plan};
     use crate::properties::PhysicalPropertySet;
@@ -141,7 +141,7 @@ mod tests {
     use crate::utils::TreeBuilder;
     use datafusion::logical_expr::binary_expr;
     use datafusion::logical_expr::Operator::Eq;
-    use datafusion::prelude::{col, JoinType};
+    use datafusion::prelude::col;
 
     fn create_optimizer(plan: Plan) -> CascadesOptimizer {
         CascadesOptimizer {
