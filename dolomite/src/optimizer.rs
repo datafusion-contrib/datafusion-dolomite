@@ -4,20 +4,28 @@ use std::sync::Arc;
 
 use crate::error::DolomiteResult;
 use crate::operator::Operator;
-use crate::plan::Plan;
+use crate::plan::{Plan, PlanNodeId, PlanNodeIdGen};
 use crate::properties::LogicalProperty;
 
 /// Context for optimization. Includes access to catalog, session variables.
 #[derive(Clone)]
 pub struct OptimizerContext {
     pub catalog: Arc<dyn SchemaProvider>,
+    plan_node_gen: PlanNodeIdGen,
 }
 
 impl Default for OptimizerContext {
     fn default() -> Self {
         Self {
             catalog: Arc::new(MemorySchemaProvider::default()),
+            plan_node_gen: PlanNodeIdGen::default(),
         }
+    }
+}
+
+impl OptimizerContext {
+    pub fn next_plan_node_id(&mut self) -> PlanNodeId {
+        self.plan_node_gen.gen_next()
     }
 }
 

@@ -11,6 +11,8 @@ mod physical;
 use crate::operator::Operator;
 pub use physical::*;
 pub mod explain;
+mod visit;
+pub use visit::*;
 
 pub type PlanNodeId = u32;
 

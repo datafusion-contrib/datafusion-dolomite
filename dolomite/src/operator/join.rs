@@ -1,4 +1,5 @@
 use anyhow::bail;
+use datafusion::common::ScalarValue;
 use std::fmt::Formatter;
 
 use crate::error::DolomiteResult;
@@ -85,6 +86,14 @@ pub struct Join {
 impl Join {
     pub fn new(join_type: JoinType, expr: Expr) -> Self {
         Self { join_type, expr }
+    }
+
+    /// Cross product is inner join without comparison condition.
+    pub fn new_cross_product() -> Self {
+        Self::new(
+            JoinType::Inner,
+            Expr::Literal(ScalarValue::Boolean(Some(true))),
+        )
     }
 
     pub fn join_type(&self) -> JoinType {

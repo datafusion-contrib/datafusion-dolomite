@@ -57,6 +57,8 @@ pub use join::*;
 mod opt_expr;
 mod table_scan;
 pub use opt_expr::*;
+mod subquery;
+pub use subquery::*;
 
 use std::fmt::{Debug, Formatter};
 
