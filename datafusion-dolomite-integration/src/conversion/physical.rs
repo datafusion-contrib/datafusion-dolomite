@@ -31,7 +31,7 @@ pub fn to_df_physical<'a>(
 ) -> BoxFuture<'a, DolomiteResult<Arc<dyn ExecutionPlan>>> {
     Box::pin(async {
         let root = plan.root();
-        plan_node_to_df_physical_plan(&*root, session_state, ctx).await
+        plan_node_to_df_physical_plan(&root, session_state, ctx).await
     })
 }
 
@@ -44,7 +44,7 @@ fn plan_node_to_df_physical_plan<'a>(
         let mut inputs = Vec::with_capacity(plan_node.inputs().len());
         for input in plan_node.inputs().iter() {
             let input_plan =
-                plan_node_to_df_physical_plan(&**input, session_state, ctx).await?;
+                plan_node_to_df_physical_plan(input, session_state, ctx).await?;
             inputs.push(input_plan);
         }
 
@@ -62,7 +62,7 @@ fn plan_node_to_df_physical_plan<'a>(
                             create_physical_expr(
                                 e,
                                 &input_df_schema,
-                                &*input_schema,
+                                &input_schema,
                                 &session_state.execution_props,
                             ),
                             create_physical_name(e),

@@ -102,7 +102,7 @@ mod tests {
             Arc::new(schema)
         };
 
-        let table_provider = Arc::new(EmptyTable::new(Arc::new((&*schema).clone())));
+        let table_provider = Arc::new(EmptyTable::new(Arc::new((*schema).clone())));
 
         // Construct datafusion logical plan
         let df_logical_plan = {
@@ -111,7 +111,7 @@ mod tests {
                 table_name: "t1".to_string(),
                 source,
                 projection: None,
-                projected_schema: (&*schema).clone().to_dfschema_ref().unwrap(),
+                projected_schema: (*schema).clone().to_dfschema_ref().unwrap(),
                 filters: vec![],
                 fetch: None,
             };
@@ -152,14 +152,14 @@ mod tests {
 
         let expected_plan = {
             let source = Arc::new(DefaultTableSource::new(Arc::new(EmptyTable::new(
-                Arc::new((&*schema).clone()),
+                Arc::new((*schema).clone()),
             ))));
 
             let df_scan = DFTableScan {
                 table_name: "t1".to_string(),
                 source,
                 projection: None,
-                projected_schema: (&*schema).clone().to_dfschema_ref().unwrap(),
+                projected_schema: (*schema).clone().to_dfschema_ref().unwrap(),
                 filters: vec![],
                 fetch: Some(5),
             };

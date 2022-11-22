@@ -41,7 +41,7 @@ impl<F: OptimizerFactory> TestCaseRunner<F> {
         for path in &self.paths {
             let file = File::options()
                 .read(true)
-                .open(&path)
+                .open(path)
                 .with_context(|| format!("Failed to open test case file: {:?}", &path))
                 .unwrap();
 

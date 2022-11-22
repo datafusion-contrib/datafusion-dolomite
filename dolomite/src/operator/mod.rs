@@ -19,6 +19,8 @@ mod join;
 use enum_as_inner::EnumAsInner;
 pub use join::*;
 pub use physical::*;
+mod filter;
+pub use filter::*;
 
 use crate::error::DolomiteResult;
 use crate::operator::Operator::{Logical, Physical};

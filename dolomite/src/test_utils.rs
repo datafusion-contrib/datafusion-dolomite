@@ -41,5 +41,5 @@ pub fn table_provider_from_schema(json: &str) -> Arc<dyn TableProvider> {
         Arc::new(schema)
     };
 
-    Arc::new(EmptyTable::new(Arc::new((&*schema).clone())))
+    Arc::new(EmptyTable::new(Arc::new((*schema).clone())))
 }

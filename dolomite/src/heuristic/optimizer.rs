@@ -243,7 +243,7 @@ impl HepOptimizer {
             node_id_map.insert(plan_node_ref.id(), plan_node_id);
         }
 
-        self.graph.root = *node_id_map.get(&(&*plan.root()).id()).unwrap();
+        self.graph.root = *node_id_map.get(&(*plan.root()).id()).unwrap();
         Ok(())
     }
 }

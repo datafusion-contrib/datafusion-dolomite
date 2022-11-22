@@ -1,7 +1,7 @@
 use enum_as_inner::EnumAsInner;
 use std::fmt::{Display, Formatter};
 
-use crate::operator::DisplayFields;
+use crate::operator::{DisplayFields, Filter};
 use crate::operator::{Join, Limit, Projection, TableScan};
 use enum_dispatch::enum_dispatch;
 use strum_macros::AsRefStr;
@@ -11,6 +11,7 @@ use strum_macros::AsRefStr;
 #[enum_dispatch]
 pub enum LogicalOperator {
     LogicalLimit(Limit),
+    LogicalFilter(Filter),
     LogicalProjection(Projection),
     LogicalJoin(Join),
     LogicalScan(TableScan),

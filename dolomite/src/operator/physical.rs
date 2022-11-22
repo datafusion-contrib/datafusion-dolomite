@@ -3,7 +3,7 @@ use std::fmt::{Debug, Display, Formatter};
 use enum_dispatch::enum_dispatch;
 
 use crate::error::DolomiteResult;
-use crate::operator::DisplayFields;
+use crate::operator::{DisplayFields, Filter};
 use crate::operator::{Join, Projection, TableScan};
 use crate::optimizer::Optimizer;
 use crate::properties::PhysicalPropertySet;
@@ -13,6 +13,7 @@ use strum_macros::AsRefStr;
 #[derive(Clone, Debug, Hash, PartialEq, AsRefStr)]
 #[enum_dispatch]
 pub enum PhysicalOperator {
+    PhysicalFilter(Filter),
     PhysicalProjection(Projection),
     PhysicalHashJoin(Join),
     PhysicalTableScan(TableScan),
