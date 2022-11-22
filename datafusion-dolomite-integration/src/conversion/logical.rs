@@ -27,7 +27,7 @@ use std::sync::Arc;
 
 /// Convert dolomite logical plan to datafusion logical plan.
 pub fn to_df_logical(plan: &Plan) -> DolomiteResult<LogicalPlan> {
-    plan_node_to_df_logical_plan(&*plan.root())
+    plan_node_to_df_logical_plan(&plan.root())
 }
 
 /// Convert datafusion logical plan to dolomite logical plan.
@@ -41,7 +41,7 @@ fn plan_node_to_df_logical_plan(plan_node: &PlanNode) -> DolomiteResult<LogicalP
     let mut inputs = plan_node
         .inputs()
         .iter()
-        .map(|p| plan_node_to_df_logical_plan(&**p))
+        .map(|p| plan_node_to_df_logical_plan(p))
         .collect::<DolomiteResult<Vec<LogicalPlan>>>()?;
 
     match plan_node.operator() {
@@ -81,7 +81,7 @@ fn plan_node_to_df_logical_plan(plan_node: &PlanNode) -> DolomiteResult<LogicalP
         Logical(LogicalScan(scan)) => {
             let schema = Arc::new(plan_node.logical_prop().unwrap().schema().clone());
             let source = Arc::new(DefaultTableSource::new(Arc::new(EmptyTable::new(
-                Arc::new((&*schema).clone().into()),
+                Arc::new((*schema).clone().into()),
             ))));
             let df_scan = DFTableScan {
                 table_name: scan.table_name().to_string(),
