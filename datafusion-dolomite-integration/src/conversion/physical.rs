@@ -99,7 +99,7 @@ fn plan_node_to_df_physical_plan<'a>(
                     physical_right,
                     join_on,
                     None,
-                    &hash_join.join_type().try_into()?,
+                    &hash_join.join_type(),
                     PartitionMode::CollectLeft,
                     &true,
                 )?) as Arc<dyn ExecutionPlan>)
