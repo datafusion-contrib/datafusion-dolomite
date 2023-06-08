@@ -46,8 +46,8 @@ mod tests {
     use crate::plan::explain::explain_to_string;
     use crate::plan::{LogicalPlanBuilder, PhysicalPlanBuilder};
     use datafusion::logical_expr::{binary_expr, col};
-    use datafusion::logical_plan::Operator::Eq;
     use datafusion::prelude::JoinType;
+    use datafusion_expr::Operator::Eq;
 
     #[test]
     fn test_explain_logical_plan() {

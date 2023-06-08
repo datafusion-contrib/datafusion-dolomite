@@ -23,11 +23,11 @@ pub struct DFOptimizerAdapterRule {
 }
 
 impl OptimizerRule for DFOptimizerAdapterRule {
-    fn optimize(
+    fn try_optimize(
         &self,
         df_plan: &LogicalPlan,
-        _optimizer_config: &mut OptimizerConfig,
-    ) -> datafusion::common::Result<LogicalPlan> {
+        _optimizer_config: &dyn OptimizerConfig,
+    ) -> datafusion::common::Result<Option<LogicalPlan>> {
         println!("Beginning to execute heuristic optimizer");
         let plan = from_df_logical(df_plan)
             .map_err(|e| DataFusionError::Plan(format!("{:?}", e)))?;
@@ -47,6 +47,7 @@ impl OptimizerRule for DFOptimizerAdapterRule {
 
         to_df_logical(&optimized_plan)
             .map_err(|e| DataFusionError::Plan(format!("{:?}", e)))
+            .map(|plan| Some(plan))
     }
 
     fn name(&self) -> &str {
@@ -59,18 +60,19 @@ mod tests {
     use crate::rule::DFOptimizerAdapterRule;
     use datafusion::arrow::datatypes::Schema;
     use datafusion::catalog::schema::MemorySchemaProvider;
+    use datafusion::catalog::TableReference;
     use datafusion::common::ToDFSchema;
     use datafusion::datasource::empty::EmptyTable;
+    use datafusion::datasource::DefaultTableSource;
     use datafusion::logical_expr::col;
-    use datafusion::logical_plan::plan::{DefaultTableSource, TableScan as DFTableScan};
-    use datafusion::logical_plan::{LogicalPlan, LogicalPlanBuilder};
     use datafusion::optimizer::optimizer::OptimizerRule;
-    use datafusion::optimizer::OptimizerConfig;
+    use datafusion_expr::logical_plan::TableScan as DFTableScan;
+    use datafusion_expr::logical_plan::{LogicalPlan, LogicalPlanBuilder};
+    use datafusion_optimizer::OptimizerContext as DFOptimizerContext;
     use dolomite::optimizer::OptimizerContext;
     use dolomite::rules::{
         PushLimitOverProjectionRule, PushLimitToTableScanRule, RemoveLimitRule,
     };
-    use serde_json::Value;
     use std::sync::Arc;
 
     #[test]
@@ -97,8 +99,7 @@ mod tests {
                 ],
                 "metadata": {}
             }"#;
-            let value: Value = serde_json::from_str(json).unwrap();
-            let schema = Schema::from(&value).unwrap();
+            let schema: Schema = serde_json::from_str(json).unwrap();
             Arc::new(schema)
         };
 
@@ -108,7 +109,7 @@ mod tests {
         let df_logical_plan = {
             let source = Arc::new(DefaultTableSource::new(table_provider.clone()));
             let df_scan = DFTableScan {
-                table_name: "t1".to_string(),
+                table_name: TableReference::from("t1").to_owned_reference(),
                 source,
                 projection: None,
                 projected_schema: (*schema).clone().to_dfschema_ref().unwrap(),
@@ -117,11 +118,11 @@ mod tests {
             };
 
             LogicalPlanBuilder::from(LogicalPlan::TableScan(df_scan))
-                .limit(None, Some(10))
+                .limit(0, Some(10))
                 .unwrap()
                 .project(vec![col("c1")])
                 .unwrap()
-                .limit(None, Some(5))
+                .limit(0, Some(5))
                 .unwrap()
                 .build()
                 .unwrap()
@@ -146,7 +147,7 @@ mod tests {
                 optimizer_context,
             };
 
-            rule.optimize(&df_logical_plan, &mut OptimizerConfig::new())
+            rule.try_optimize(&df_logical_plan, &DFOptimizerContext::default())
                 .unwrap()
         };
 
@@ -156,7 +157,7 @@ mod tests {
             ))));
 
             let df_scan = DFTableScan {
-                table_name: "t1".to_string(),
+                table_name: TableReference::from("t1").to_owned_reference(),
                 source,
                 projection: None,
                 projected_schema: (*schema).clone().to_dfschema_ref().unwrap(),

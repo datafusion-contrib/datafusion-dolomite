@@ -5,8 +5,8 @@ use crate::operator::{
 };
 use crate::optimizer::{OptExpr, OptGroup, Optimizer};
 use crate::properties::LogicalProperty;
-use datafusion::logical_plan::DFSchema;
 use datafusion::prelude::{Column, Expr};
+use datafusion_common::DFSchema;
 use itertools::Itertools;
 use std::collections::HashMap;
 use std::fmt::Formatter;

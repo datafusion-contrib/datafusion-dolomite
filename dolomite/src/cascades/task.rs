@@ -629,9 +629,9 @@ mod tests {
     use crate::properties::PhysicalPropertySet;
     use crate::rules::CommutateJoinRule;
     use datafusion::logical_expr::binary_expr;
-    use datafusion::logical_plan::JoinType;
-    use datafusion::logical_plan::Operator::Eq;
     use datafusion::prelude::col;
+    use datafusion_expr::JoinType;
+    use datafusion_expr::Operator::Eq;
 
     #[test]
     fn test_apply_rule_task() {

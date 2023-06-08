@@ -4,8 +4,8 @@ use datafusion::common::{DataFusionError, ToDFSchema};
 
 use datafusion::execution::context::SessionState;
 
-use datafusion::physical_plan::hash_join::{HashJoinExec, PartitionMode};
-use datafusion::physical_plan::join_utils::JoinOn;
+use datafusion::physical_plan::joins::utils::JoinOn;
+use datafusion::physical_plan::joins::{HashJoinExec, PartitionMode};
 use datafusion::physical_plan::projection::ProjectionExec;
 use datafusion::physical_plan::ExecutionPlan;
 use datafusion::prelude::Expr;

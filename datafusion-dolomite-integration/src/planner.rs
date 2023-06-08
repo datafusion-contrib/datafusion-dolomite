@@ -62,13 +62,14 @@ mod tests {
     use datafusion::catalog::schema::MemorySchemaProvider;
     use datafusion::common::ToDFSchema;
     use datafusion::datasource::empty::EmptyTable;
+    use datafusion::datasource::DefaultTableSource;
     use datafusion::execution::context::{QueryPlanner, SessionState};
     use datafusion::execution::runtime_env::{RuntimeConfig, RuntimeEnv};
     use datafusion::logical_expr::LogicalPlan;
-    use datafusion::logical_plan::plan::{DefaultTableSource, TableScan as DFTableScan};
-    use datafusion::logical_plan::{JoinType, LogicalPlanBuilder};
     use datafusion::physical_plan::displayable;
     use datafusion::prelude::SessionConfig;
+    use datafusion_expr::logical_plan::TableScan as DFTableScan;
+    use datafusion_expr::logical_plan::{JoinType, LogicalPlanBuilder};
     use dolomite::optimizer::OptimizerContext;
     use dolomite::rules::{CommutateJoinRule, Join2HashJoinRule, Scan2TableScanRule};
     use serde_json::Value;

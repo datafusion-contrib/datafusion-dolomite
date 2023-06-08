@@ -4,11 +4,13 @@ use datafusion::common::ScalarValue;
 use datafusion::datasource::empty::EmptyTable;
 
 use datafusion::logical_expr::{and, LogicalPlan};
-use datafusion::logical_plan::plan::{
-    DefaultTableSource, Join as DFJoin, Limit as DFLimit, Projection as DFProjection,
+use datafusion_expr::logical_plan::JoinConstraint;
+use datafusion_expr::logical_plan::{
+    Join as DFJoin, Limit as DFLimit, Projection as DFProjection,
     TableScan as DFTableScan,
 };
-use datafusion::logical_plan::JoinConstraint;
+
+use datafusion::datasource::DefaultTableSource;
 
 use datafusion::prelude::Expr;
 use datafusion::prelude::Expr::Column as ExprColumn;
@@ -23,6 +25,7 @@ use dolomite::operator::{Join, Limit, LogicalOperator, Projection, TableScan};
 
 use dolomite::plan::{Plan, PlanNode, PlanNodeIdGen};
 
+use datafusion_sql::TableReference;
 use std::sync::Arc;
 
 /// Convert dolomite logical plan to datafusion logical plan.
@@ -46,18 +49,17 @@ fn plan_node_to_df_logical_plan(plan_node: &PlanNode) -> DolomiteResult<LogicalP
 
     match plan_node.operator() {
         Logical(LogicalProjection(projection)) => {
-            let df_projection = DFProjection {
-                expr: Vec::from(projection.expr()),
-                input: Arc::new(inputs.remove(0)),
-                schema: Arc::new(plan_node.logical_prop().unwrap().schema().clone()),
-                alias: None,
-            };
+            let df_projection = DFProjection::try_new_with_schema(
+                Vec::from(projection.expr()),
+                Arc::new(inputs.remove(0)),
+                Arc::new(plan_node.logical_prop().unwrap().schema().clone()),
+            );
 
             Ok(LogicalPlan::Projection(df_projection))
         }
         Logical(LogicalLimit(limit)) => {
             let df_limit = DFLimit {
-                skip: None,
+                skip: 0,
                 fetch: Some(limit.limit()),
                 input: Arc::new(inputs.remove(0)),
             };
@@ -84,7 +86,7 @@ fn plan_node_to_df_logical_plan(plan_node: &PlanNode) -> DolomiteResult<LogicalP
                 Arc::new((*schema).clone().into()),
             ))));
             let df_scan = DFTableScan {
-                table_name: scan.table_name().to_string(),
+                table_name: TableReference::from(scan.table_name()).to_owned_reference(),
                 source,
                 projection: None,
                 projected_schema: schema,

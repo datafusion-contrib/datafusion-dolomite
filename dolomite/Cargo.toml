@@ -4,8 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-datafusion = { git = "https://github.com/apache/arrow-datafusion", rev = "884101e" }
-datafusion-physical-expr = { git = "https://github.com/apache/arrow-datafusion", rev = "884101e" }
+datafusion = "26.0.0"
+datafusion-expr = "26.0.0"
+datafusion-common = "26.0.0"
+datafusion-physical-expr = "26.0.0"
+arrow-schema = { version = "40.0.0", features = ["serde"] }
 thiserror = "1"
 enum_dispatch = "0.3"
 log = "^0.4"
@@ -14,7 +17,7 @@ itertools = "0.10"
 enum-as-inner = "0.5.1"
 derive_more = "0.99"
 petgraph = "0.6"
-anyhow = {version = "1", features = ["backtrace"] }
+anyhow = { version = "1", features = ["backtrace"] }
 smallvec = "1"
 prettytable-rs = "0.10"
 lazy_static = "1"
