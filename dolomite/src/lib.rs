@@ -39,7 +39,6 @@
 //! international  conference on Management of data (pp. 337-348).
 //! 4. Columnbia Project, https://github.com/yongwen/columbia
 
-#[macro_use]
 extern crate prettytable;
 #[macro_use]
 extern crate lazy_static;
