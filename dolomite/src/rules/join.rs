@@ -1,7 +1,7 @@
 use anyhow::bail;
+use datafusion::prelude::JoinType;
 
 use crate::error::DolomiteResult;
-use crate::operator::JoinType;
 use crate::operator::LogicalOperator::LogicalJoin;
 use crate::operator::Operator;
 use crate::operator::Operator::{Logical, Physical};

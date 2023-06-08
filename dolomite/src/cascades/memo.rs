@@ -852,6 +852,7 @@ pub(super) struct WinnerInput {
 mod tests {
 
     use datafusion::logical_expr::{binary_expr, col};
+    use datafusion::prelude::JoinType;
 
     use crate::cascades::memo::Memo;
     use crate::operator::LogicalOperator::{
@@ -859,8 +860,8 @@ mod tests {
     };
     use crate::operator::Operator::Logical;
     use crate::operator::{
-        Join, JoinType, Limit as LimitOp, Projection as ProjectionOp,
-        TableScan as TableScanOp, TableScan,
+        Join, Limit as LimitOp, Projection as ProjectionOp, TableScan as TableScanOp,
+        TableScan,
     };
     use crate::plan::LogicalPlanBuilder;
     use datafusion::logical_plan::Operator::Eq;

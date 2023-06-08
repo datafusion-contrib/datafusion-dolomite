@@ -622,13 +622,14 @@ mod tests {
     use crate::cascades::task::{ApplyRule, Task};
     use crate::cascades::{CascadesOptimizer, GroupId};
     use crate::cost::INF;
+    use crate::operator::Join;
     use crate::operator::LogicalOperator::LogicalJoin;
     use crate::operator::Operator::Logical;
-    use crate::operator::{Join, JoinType};
     use crate::plan::LogicalPlanBuilder;
     use crate::properties::PhysicalPropertySet;
     use crate::rules::CommutateJoinRule;
     use datafusion::logical_expr::binary_expr;
+    use datafusion::logical_plan::JoinType;
     use datafusion::logical_plan::Operator::Eq;
     use datafusion::prelude::col;
 
