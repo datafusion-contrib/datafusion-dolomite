@@ -2,7 +2,7 @@ use crate::utils::hep_optimizer::HepOptimizerFactoryBuilder;
 use crate::utils::schema::create_table_source;
 use crate::utils::schema::MySchemaProvider;
 use crate::utils::TestCaseRunner;
-use arrow::datatypes::{DataType, Field};
+use arrow_schema::{DataType, Field};
 use datafusion_sql::sqlparser::dialect::GenericDialect;
 use dolomite::optimizer::OptimizerContext;
 use dolomite::rules::{

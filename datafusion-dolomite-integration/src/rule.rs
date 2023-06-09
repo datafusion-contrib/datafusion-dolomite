@@ -47,7 +47,7 @@ impl OptimizerRule for DFOptimizerAdapterRule {
 
         to_df_logical(&optimized_plan)
             .map_err(|e| DataFusionError::Plan(format!("{:?}", e)))
-            .map(|plan| Some(plan))
+            .map(Some)
     }
 
     fn name(&self) -> &str {
@@ -83,18 +83,18 @@ mod tests {
                     {
                         "name": "c1",
                         "nullable": false,
-                        "type": {
-                            "name": "utf8"
-                        },
-                        "children": []
+                        "data_type":  "Utf8",
+                        "dict_id": 0,
+                        "dict_is_ordered": false,
+                        "metadata": {}
                     },
                     {
                         "name": "c2",
                         "nullable": false,
-                        "type": {
-                            "name": "utf8"
-                        },
-                        "children": []
+                        "data_type":  "Utf8",
+                        "dict_id": 0,
+                        "dict_is_ordered": false,
+                        "metadata": {}
                     }
                 ],
                 "metadata": {}
@@ -174,7 +174,7 @@ mod tests {
 
         assert_eq!(
             format!("{:?}", expected_plan),
-            format!("{:?}", optimized_plan)
+            format!("{:?}", optimized_plan.unwrap())
         );
     }
 }

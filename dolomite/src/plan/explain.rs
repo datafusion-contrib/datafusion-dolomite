@@ -60,7 +60,7 @@ mod tests {
 
         let expected_result = "\
 LogicalLimit { limit: 10 }
-└─ LogicalProjection { expr: [#c1] }
+└─ LogicalProjection { expr: [c1] }
    └─ LogicalLimit { limit: 5 }
       └─ LogicalScan { table_name: \"t1\" }
 ";
@@ -85,7 +85,7 @@ LogicalLimit { limit: 10 }
         };
 
         let expected_result = "\
-PhysicalHashJoin { join_type: Inner, expr: #t1.c1 = #t2.c2 }
+PhysicalHashJoin { join_type: Inner, expr: t1.c1 = t2.c2 }
 ├─ PhysicalTableScan { table_name: \"t1\" }
 └─ PhysicalTableScan { table_name: \"t2\" }
 ";

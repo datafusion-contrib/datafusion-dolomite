@@ -2,7 +2,6 @@
 mod logical;
 
 use anyhow::bail;
-use datafusion::common::Column;
 use datafusion::prelude::Expr;
 use dolomite::error::DolomiteResult;
 pub use logical::*;
