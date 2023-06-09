@@ -4,37 +4,38 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-datafusion = "26.0.0"
-datafusion-expr = "26.0.0"
-datafusion-sql = "26.0.0"
-datafusion-physical-expr = "26.0.0"
-datafusion-optimizer = "26.0.0"
-arrow-schema = { version = "40.0.0", features = ["serde"]}
-dolomite = { path = "../dolomite"}
-thiserror = "1"
-enum_dispatch = "0.3"
-log = "^0.4"
-enumset = "1"
-itertools = "0.10"
-enum-as-inner = "0.4"
-derive_more = "0.99"
-petgraph = "0.6"
-anyhow = "1"
-smallvec = "1"
-prettytable-rs = "^0.8"
-lazy_static = "1"
-strum = "0.24"
-strum_macros = "0.24"
-async-trait = "0.1.41"
-futures = "0.3"
+dolomite = { path = "../dolomite" }
+
+datafusion.workspace = true
+datafusion-expr.workspace = true
+datafusion-sql.workspace = true
+datafusion-physical-expr.workspace = true
+datafusion-optimizer.workspace = true
+arrow-schema.workspace = true
+thiserror.workspace = true
+enum_dispatch.workspace = true
+log.workspace = true
+enumset.workspace = true
+itertools.workspace = true
+enum-as-inner.workspace = true
+derive_more.workspace = true
+petgraph.workspace = true
+anyhow.workspace = true
+smallvec.workspace = true
+prettytable-rs.workspace = true
+lazy_static.workspace = true
+strum.workspace = true
+strum_macros.workspace = true
+async-trait.workspace = true
+futures.workspace = true
 
 
 [dev-dependencies]
-tokio = { version = "1.0", features = ["macros", "rt", "rt-multi-thread", "sync", "fs", "parking_lot"] }
-tokio-stream = "0.1"
-serde = { version = "1.0", features = ["derive"] }
-serde_yaml = "0.9"
-serde_json = "1.0"
-maplit = "1"
-arrow = { version = "18.0.0", features = ["prettyprint"] }
+tokio.workspace = true
+tokio-stream.workspace = true
+serde.workspace = true
+serde_yaml.workspace = true
+serde_json.workspace = true
+maplit.workspace = true
+arrow.workspace = true
 
