@@ -4,34 +4,34 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-datafusion = "26.0.0"
-datafusion-expr = "26.0.0"
-datafusion-common = "26.0.0"
-datafusion-physical-expr = "26.0.0"
-arrow-schema = { version = "40.0.0", features = ["serde"] }
-thiserror = "1"
-enum_dispatch = "0.3"
-log = "^0.4"
-enumset = "1"
-itertools = "0.10"
-enum-as-inner = "0.5.1"
-derive_more = "0.99"
-petgraph = "0.6"
-anyhow = { version = "1", features = ["backtrace"] }
-smallvec = "1"
-prettytable-rs = "0.10"
-lazy_static = "1"
-strum = "0.24"
-strum_macros = "0.24"
-async-trait = "0.1.41"
-futures = "0.3"
-ptree = "0.4"
+datafusion.workspace = true
+datafusion-expr.workspace = true
+datafusion-common.workspace = true
+datafusion-physical-expr.workspace = true
+arrow-schema.workspace = true
+thiserror.workspace = true
+enum_dispatch.workspace = true
+log.workspace = true
+enumset.workspace = true
+itertools.workspace = true
+enum-as-inner.workspace = true
+derive_more.workspace = true
+petgraph.workspace = true
+anyhow.workspace = true
+smallvec.workspace = true
+prettytable-rs.workspace = true
+lazy_static.workspace = true
+strum.workspace = true
+strum_macros.workspace = true
+async-trait.workspace = true
+futures.workspace = true
+ptree.workspace = true
 
 
 [dev-dependencies]
-serde = "1.0"
-serde_json = "1.0"
-tokio = { version = "1.0", features = ["macros", "rt", "rt-multi-thread", "sync", "fs", "parking_lot"] }
-tokio-stream = "0.1"
-maplit = "1"
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+tokio-stream.workspace = true
+maplit.workspace = true
 
