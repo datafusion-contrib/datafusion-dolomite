@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use datafusion::arrow::datatypes::{DataType, Field, Schema, SchemaRef};
 use datafusion::catalog::schema::SchemaProvider;
 use datafusion::common::DataFusionError;
+use datafusion::config::ConfigOptions;
 use datafusion::datasource::{TableProvider, TableType};
 use datafusion::execution::context::SessionState;
 use datafusion::logical_expr::{AggregateUDF, Expr, ScalarUDF, TableSource};
@@ -20,11 +21,15 @@ pub struct MyTable {
 
 pub struct MySchemaProvider {
     tables: HashMap<String, Arc<MyTable>>,
+    options: ConfigOptions,
 }
 
 impl MySchemaProvider {
     pub fn new(tables: HashMap<String, Arc<MyTable>>) -> Self {
-        Self { tables }
+        Self {
+            tables,
+            options: ConfigOptions::default(),
+        }
     }
 }
 
@@ -56,8 +61,13 @@ impl ContextProvider for MySchemaProvider {
     fn get_variable_type(&self, _variable_names: &[String]) -> Option<DataType> {
         None
     }
+
+    fn options(&self) -> &ConfigOptions {
+        &self.options
+    }
 }
 
+#[async_trait]
 impl SchemaProvider for MySchemaProvider {
     fn as_any(&self) -> &dyn Any {
         self
@@ -67,7 +77,7 @@ impl SchemaProvider for MySchemaProvider {
         self.tables.keys().map(Clone::clone).collect()
     }
 
-    fn table(&self, name: &str) -> Option<Arc<dyn TableProvider>> {
+    async fn table(&self, name: &str) -> Option<Arc<dyn TableProvider>> {
         self.tables
             .get(name)
             .map(|t| t.clone() as Arc<dyn TableProvider>)
@@ -105,12 +115,12 @@ impl TableProvider for MyTable {
     async fn scan(
         &self,
         _ctx: &SessionState,
-        projection: &Option<Vec<usize>>,
+        projection: Option<&Vec<usize>>,
         _filters: &[Expr],
         _limit: Option<usize>,
     ) -> datafusion::common::Result<Arc<dyn ExecutionPlan>> {
         // even though there is no data, projections apply
-        let projected_schema = project_schema(&self.table_schema, projection.as_ref())?;
+        let projected_schema = project_schema(&self.table_schema, projection)?;
         Ok(Arc::new(
             EmptyExec::new(false, projected_schema).with_partitions(1),
         ))

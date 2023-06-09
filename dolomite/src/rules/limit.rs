@@ -189,18 +189,18 @@ mod tests {
                     {
                         "name": "c1",
                         "nullable": false,
-                        "type": {
-                            "name": "utf8"
-                        },
-                        "children": []
+                        "data_type": "Utf8",
+                        "dict_id": 0,
+                        "dict_is_ordered": false,
+                        "metadata": {}
                     },
                     {
                         "name": "c2",
                         "nullable": false,
-                        "type": {
-                            "name": "utf8"
-                        },
-                        "children": []
+                        "data_type": "Utf8",
+                        "dict_id": 0,
+                        "dict_is_ordered": false,
+                        "metadata": {}
                     }
                 ],
                 "metadata": {}

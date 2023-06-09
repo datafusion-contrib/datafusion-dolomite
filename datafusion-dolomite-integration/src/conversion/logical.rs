@@ -1,17 +1,15 @@
 use crate::conversion::expr_to_df_join_condition;
 use anyhow::bail;
-use datafusion::common::ScalarValue;
 use datafusion::datasource::empty::EmptyTable;
 
-use datafusion::logical_expr::{and, LogicalPlan};
-use datafusion::logical_plan::plan::{
-    DefaultTableSource, Join as DFJoin, Limit as DFLimit, Projection as DFProjection,
+use datafusion::logical_expr::LogicalPlan;
+use datafusion_expr::logical_plan::JoinConstraint;
+use datafusion_expr::logical_plan::{
+    Join as DFJoin, Limit as DFLimit, Projection as DFProjection,
     TableScan as DFTableScan,
 };
-use datafusion::logical_plan::JoinConstraint;
 
-use datafusion::prelude::Expr;
-use datafusion::prelude::Expr::Column as ExprColumn;
+use datafusion::datasource::DefaultTableSource;
 
 use dolomite::error::DolomiteResult;
 use dolomite::operator::LogicalOperator::{
@@ -19,10 +17,11 @@ use dolomite::operator::LogicalOperator::{
 };
 use dolomite::operator::Operator::Logical;
 
-use dolomite::operator::{Join, Limit, LogicalOperator, Projection, TableScan};
+use dolomite::operator::{Limit, LogicalOperator, Projection, TableScan};
 
 use dolomite::plan::{Plan, PlanNode, PlanNodeIdGen};
 
+use datafusion_sql::TableReference;
 use std::sync::Arc;
 
 /// Convert dolomite logical plan to datafusion logical plan.
@@ -46,18 +45,18 @@ fn plan_node_to_df_logical_plan(plan_node: &PlanNode) -> DolomiteResult<LogicalP
 
     match plan_node.operator() {
         Logical(LogicalProjection(projection)) => {
-            let df_projection = DFProjection {
-                expr: Vec::from(projection.expr()),
-                input: Arc::new(inputs.remove(0)),
-                schema: Arc::new(plan_node.logical_prop().unwrap().schema().clone()),
-                alias: None,
-            };
+            let df_projection = DFProjection::try_new_with_schema(
+                Vec::from(projection.expr()),
+                Arc::new(inputs.remove(0)),
+                Arc::new(plan_node.logical_prop().unwrap().schema().clone()),
+            )
+            .unwrap();
 
             Ok(LogicalPlan::Projection(df_projection))
         }
         Logical(LogicalLimit(limit)) => {
             let df_limit = DFLimit {
-                skip: None,
+                skip: 0,
                 fetch: Some(limit.limit()),
                 input: Arc::new(inputs.remove(0)),
             };
@@ -84,7 +83,7 @@ fn plan_node_to_df_logical_plan(plan_node: &PlanNode) -> DolomiteResult<LogicalP
                 Arc::new((*schema).clone().into()),
             ))));
             let df_scan = DFTableScan {
-                table_name: scan.table_name().to_string(),
+                table_name: TableReference::from(scan.table_name()).to_owned_reference(),
                 source,
                 projection: None,
                 projected_schema: schema,
@@ -117,25 +116,27 @@ fn df_logical_plan_to_plan_node(
             let inputs = vec![df_logical_plan_to_plan_node(&limit.input, id_gen)?];
             (operator, inputs)
         }
-        LogicalPlan::Join(join) => {
-            let join_cond = join
-                .on
-                .iter()
-                .map(|(left, right)| {
-                    ExprColumn(left.clone()).eq(ExprColumn(right.clone()))
-                })
-                .reduce(and)
-                .unwrap_or(Expr::Literal(ScalarValue::Boolean(Some(true))));
-            let operator =
-                LogicalOperator::LogicalJoin(Join::new(join.join_type, join_cond));
-            let inputs = vec![
-                df_logical_plan_to_plan_node(&join.left, id_gen)?,
-                df_logical_plan_to_plan_node(&join.right, id_gen)?,
-            ];
-            (operator, inputs)
-        }
+        // LogicalPlan::Join(join) => {
+        //     let join_cond = join
+        //         .on
+        //         .iter()
+        //         .map(|(left, right)| {
+        //             ExprColumn(left.clone()).eq(ExprColumn(right.clone()))
+        //         })
+        //         .reduce(and)
+        //         .unwrap_or(Expr::Literal(ScalarValue::Boolean(Some(true))));
+        //     let operator =
+        //         LogicalOperator::LogicalJoin(Join::new(join.join_type, join_cond));
+        //     let inputs = vec![
+        //         df_logical_plan_to_plan_node(&join.left, id_gen)?,
+        //         df_logical_plan_to_plan_node(&join.right, id_gen)?,
+        //     ];
+        //     (operator, inputs)
+        // }
         LogicalPlan::TableScan(scan) => {
-            let operator = LogicalOperator::LogicalScan(TableScan::new(&scan.table_name));
+            let operator = LogicalOperator::LogicalScan(TableScan::new(
+                scan.table_name.table().to_string(),
+            ));
             let inputs = vec![];
             (operator, inputs)
         }

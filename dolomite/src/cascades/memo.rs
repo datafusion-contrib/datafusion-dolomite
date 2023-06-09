@@ -864,7 +864,7 @@ mod tests {
         TableScan,
     };
     use crate::plan::LogicalPlanBuilder;
-    use datafusion::logical_plan::Operator::Eq;
+    use datafusion_expr::Operator::Eq;
 
     #[test]
     fn test_build_memo_from_plan() {

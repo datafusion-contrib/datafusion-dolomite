@@ -7,6 +7,7 @@ use crate::optimizer::Optimizer;
 use crate::properties::{LogicalProperty, PhysicalPropertySet};
 use anyhow::anyhow;
 use datafusion::common::{DFField, DFSchema};
+use futures::executor::block_on;
 use std::fmt::Formatter;
 
 #[derive(Clone, Debug, Hash, Eq, PartialEq)]
@@ -57,10 +58,7 @@ impl OperatorTrait for TableScan {
         _handle: O::ExprHandle,
         optimizer: &O,
     ) -> DolomiteResult<LogicalProperty> {
-        let schema = optimizer
-            .context()
-            .catalog
-            .table(&self.table_name)
+        let schema = block_on(optimizer.context().catalog.table(&self.table_name))
             .ok_or_else(|| anyhow!("Table {:?} not exists", &self.table_name))?
             .schema();
 

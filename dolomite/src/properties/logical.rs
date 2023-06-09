@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use datafusion::logical_plan::DFSchema;
+use datafusion_common::DFSchema;
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct LogicalProperty {

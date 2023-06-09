@@ -1,11 +1,8 @@
-use crate::conversion::expr_to_df_join_condition;
 use anyhow::{anyhow, bail};
 use datafusion::common::{DataFusionError, ToDFSchema};
 
 use datafusion::execution::context::SessionState;
 
-use datafusion::physical_plan::hash_join::{HashJoinExec, PartitionMode};
-use datafusion::physical_plan::join_utils::JoinOn;
 use datafusion::physical_plan::projection::ProjectionExec;
 use datafusion::physical_plan::ExecutionPlan;
 use datafusion::prelude::Expr;
@@ -14,12 +11,11 @@ use dolomite::error::DFResult;
 use dolomite::error::DolomiteResult;
 
 use dolomite::operator::Operator::Physical;
-use dolomite::operator::PhysicalOperator::{
-    PhysicalHashJoin, PhysicalProjection, PhysicalTableScan,
-};
+use dolomite::operator::PhysicalOperator::{PhysicalProjection, PhysicalTableScan};
 
 use dolomite::optimizer::OptimizerContext;
 use dolomite::plan::{Plan, PlanNode};
+use futures::executor::block_on;
 use futures::future::BoxFuture;
 use std::sync::Arc;
 
@@ -63,7 +59,7 @@ fn plan_node_to_df_physical_plan<'a>(
                                 e,
                                 &input_df_schema,
                                 &input_schema,
-                                &session_state.execution_props,
+                                session_state.execution_props(),
                             ),
                             create_physical_name(e),
                         ))
@@ -73,44 +69,44 @@ fn plan_node_to_df_physical_plan<'a>(
                 Ok(Arc::new(ProjectionExec::try_new(physical_exprs, input)?)
                     as Arc<dyn ExecutionPlan>)
             }
-            Physical(PhysicalHashJoin(hash_join)) => {
-                let physical_left = inputs.remove(0);
-                let physical_right = inputs.remove(0);
-                let left_df_schema = physical_left.schema().to_dfschema()?;
-                let right_df_schema = physical_right.schema().to_dfschema()?;
-                let join_on = expr_to_df_join_condition(hash_join.expr())?
-                    .iter()
-                    .map(|(l, r)| {
-                        Ok((
-                            datafusion_physical_expr::expressions::Column::new(
-                                &l.name,
-                                left_df_schema.index_of_column(l)?,
-                            ),
-                            datafusion_physical_expr::expressions::Column::new(
-                                &r.name,
-                                right_df_schema.index_of_column(r)?,
-                            ),
-                        ))
-                    })
-                    .collect::<DFResult<JoinOn>>()?;
-
-                Ok(Arc::new(HashJoinExec::try_new(
-                    physical_left,
-                    physical_right,
-                    join_on,
-                    None,
-                    &hash_join.join_type(),
-                    PartitionMode::CollectLeft,
-                    &true,
-                )?) as Arc<dyn ExecutionPlan>)
-            }
+            // Physical(PhysicalHashJoin(hash_join)) => {
+            //     let physical_left = inputs.remove(0);
+            //     let physical_right = inputs.remove(0);
+            //     let left_df_schema = physical_left.schema().to_dfschema()?;
+            //     let right_df_schema = physical_right.schema().to_dfschema()?;
+            //     let join_on = expr_to_df_join_condition(hash_join.expr())?
+            //         .iter()
+            //         .map(|(l, r)| {
+            //             Ok((
+            //                 datafusion_physical_expr::expressions::Column::new(
+            //                     &l.name,
+            //                     left_df_schema.index_of_column(l)?,
+            //                 ),
+            //                 datafusion_physical_expr::expressions::Column::new(
+            //                     &r.name,
+            //                     right_df_schema.index_of_column(r)?,
+            //                 ),
+            //             ))
+            //         })
+            //         .collect::<DFResult<JoinOn>>()?;
+            //
+            //     Ok(Arc::new(HashJoinExec::try_new(
+            //         physical_left,
+            //         physical_right,
+            //         join_on,
+            //         None,
+            //         &hash_join.join_type(),
+            //         PartitionMode::CollectLeft,
+            //         &true,
+            //     )?) as Arc<dyn ExecutionPlan>)
+            // }
             Physical(PhysicalTableScan(table_scan)) => {
-                let source =
-                    ctx.catalog.table(table_scan.table_name()).ok_or_else(|| {
+                let source = block_on(ctx.catalog.table(table_scan.table_name()))
+                    .ok_or_else(|| {
                         anyhow!(format!("Table not found: {}", table_scan.table_name()))
                     })?;
                 Ok(source
-                    .scan(session_state, &None, &[], None)
+                    .scan(session_state, None, &[], None)
                     .await
                     .map_err(|e| anyhow!(e))?
                     as Arc<dyn ExecutionPlan>)

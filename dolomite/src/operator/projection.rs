@@ -1,6 +1,6 @@
 use datafusion::common::DFField;
-use datafusion::logical_expr::ExprSchemable;
-use datafusion::logical_plan::{DFSchema, Expr};
+use datafusion_common::DFSchema;
+use datafusion_expr::Expr;
 use std::fmt::Formatter;
 
 use crate::error::{DFResult, DolomiteResult};
@@ -10,6 +10,7 @@ use crate::operator::{
 };
 use crate::optimizer::{OptExpr, OptGroup, Optimizer};
 use crate::properties::LogicalProperty;
+use datafusion_expr::ExprSchemable;
 
 #[derive(Clone, Debug, Hash, PartialEq)]
 pub struct Projection {

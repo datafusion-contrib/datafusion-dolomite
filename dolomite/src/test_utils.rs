@@ -1,11 +1,10 @@
 use crate::heuristic::{HepOptimizer, MatchOrder};
 use crate::optimizer::OptimizerContext;
 use crate::plan::Plan;
-use datafusion::arrow::datatypes::Schema;
+use arrow_schema::Schema;
 use datafusion::catalog::schema::MemorySchemaProvider;
 use datafusion::datasource::empty::EmptyTable;
 use datafusion::datasource::TableProvider;
-use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -36,8 +35,7 @@ pub fn build_hep_optimizer_for_test(
 
 pub fn table_provider_from_schema(json: &str) -> Arc<dyn TableProvider> {
     let schema = {
-        let value: Value = serde_json::from_str(json).unwrap();
-        let schema = Schema::from(&value).unwrap();
+        let schema: Schema = serde_json::from_str(json).unwrap();
         Arc::new(schema)
     };
 
